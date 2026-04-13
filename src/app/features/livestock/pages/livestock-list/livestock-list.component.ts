@@ -170,9 +170,9 @@ import { Livestock } from '../../../../shared/models/livestock.model';
     .table-row:hover { background-color: #f8f9fa; }
     
     /* Specific Column Styles */
-    .tag-text { color: #3f51b5; font-family: monospace; font-size: 1.05rem; }
+    .tag-text { color: var(--primary-color); font-family: monospace; font-size: 1.05rem; }
     .name-cell { display: flex; align-items: center; gap: 12px; font-weight: 500; }
-    .avatar-icon { background: #e8eaf6; padding: 8px; border-radius: 50%; color: #3f51b5; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+    .avatar-icon { background: rgba(var(--primary-color-rgb, 63, 81, 181), 0.1); padding: 8px; border-radius: 50%; color: var(--primary-color); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
     
     .category-chip { background-color: #f1f2f6 !important; color: #2c3e50 !important; font-weight: 500; border: 1px solid #dfe4ea; }
     

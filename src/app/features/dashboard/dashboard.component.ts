@@ -148,7 +148,7 @@ import { TransactionService } from '../../core/services/transaction.service';
     
     .stat-icon-wrapper { width: 64px; height: 64px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 20px; }
     .stat-icon-wrapper mat-icon { transform: scale(1.5); }
-    .bg-primary-light { background-color: rgba(63, 81, 181, 0.1); }
+    .bg-primary-light { background-color: rgba(var(--primary-color-rgb, 63, 81, 181), 0.1); }
     .bg-accent-light { background-color: rgba(255, 64, 129, 0.1); }
     .bg-warn-light { background-color: rgba(244, 67, 54, 0.1); }
     .bg-success-light { background-color: rgba(76, 175, 80, 0.1); }

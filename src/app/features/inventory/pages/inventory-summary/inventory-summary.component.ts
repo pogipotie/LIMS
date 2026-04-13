@@ -131,10 +131,10 @@ import { InventoryService } from '../../../../core/services/inventory.service';
     .formula-row.deduction .formula-value { color: #c62828; }
     .formula-row.deduction .formula-value::before { content: '- '; opacity: 0.5; font-weight: normal; }
     
-    .formula-row.neutral .formula-value { color: #3f51b5; }
+    .formula-row.neutral .formula-value { color: var(--primary-color); }
 
     /* Total Card Styling */
-    .total-card { border-radius: 16px; box-shadow: 0 8px 30px rgba(63, 81, 181, 0.15) !important; background: linear-gradient(135deg, #3f51b5 0%, #283593 100%); color: white; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; }
+    .total-card { border-radius: 16px; box-shadow: 0 8px 30px rgba(var(--primary-color-rgb, 63, 81, 181), 0.15) !important; background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%); color: white; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; }
     .total-content { padding: 40px 20px; }
     .total-icon { font-size: 64px; width: 64px; height: 64px; margin-bottom: 24px; opacity: 0.8; }
     .total-content h3 { margin: 0 0 16px 0; font-weight: 400; opacity: 0.9; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }

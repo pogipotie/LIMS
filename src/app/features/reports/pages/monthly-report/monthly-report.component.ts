@@ -147,7 +147,7 @@ import { ReportService } from '../../../../core/services/report.service';
     
     .custom-card-header { padding: 24px; background-color: white; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
     .header-title-section { display: flex; align-items: center; }
-    .header-icon { display: flex; justify-content: center; align-items: center; background-color: #e8eaf6; border-radius: 50%; color: #3f51b5; margin-right: 16px; }
+    .header-icon { display: flex; justify-content: center; align-items: center; background-color: rgba(var(--primary-color-rgb, 63, 81, 181), 0.1); border-radius: 50%; color: var(--primary-color); margin-right: 16px; }
     .export-btn { padding: 4px 20px; border-radius: 8px; }
     
     .report-content { padding: 32px 24px !important; background-color: #fafafa; }

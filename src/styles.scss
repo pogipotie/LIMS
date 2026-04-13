@@ -8,21 +8,25 @@ body {
   margin: 0; 
   font-family: Roboto, "Helvetica Neue", sans-serif; 
   --primary-color: #3f51b5;
+  --primary-color-rgb: 63, 81, 181;
   --accent-color: #ff4081;
 }
 
 body.deeppurple-amber-theme {
   --primary-color: #673ab7;
+  --primary-color-rgb: 103, 58, 183;
   --accent-color: #ffd740;
 }
 
 body.pink-bluegrey-theme {
   --primary-color: #e91e63;
+  --primary-color-rgb: 233, 30, 99;
   --accent-color: #b0bec5;
 }
 
 body.purple-green-theme {
   --primary-color: #9c27b0;
+  --primary-color-rgb: 156, 39, 176;
   --accent-color: #69f0ae;
 }
 
@@ -90,6 +94,11 @@ body.purple-green-theme {
 }
 
 /* Explicitly target components that need strict CSS inheritance overrides */
+.mat-toolbar.mat-primary {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
 .mat-mdc-button.mat-accent, 
 .mat-mdc-raised-button.mat-accent, 
 .mat-mdc-unelevated-button.mat-accent,

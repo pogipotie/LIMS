@@ -161,8 +161,8 @@ import { Transaction } from '../../../../shared/models/transaction.model';
     .date-text { color: #7f8c8d; font-weight: 500; }
     
     .name-cell { display: flex; align-items: center; gap: 12px; }
-    .avatar-icon { background: #e8eaf6; padding: 8px; border-radius: 50%; color: #3f51b5; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
-    .tag-text { color: #2c3e50; font-family: monospace; font-size: 1.05rem; }
+    .avatar-icon { background: rgba(var(--primary-color-rgb, 63, 81, 181), 0.1); padding: 8px; border-radius: 50%; color: var(--primary-color); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+    .tag-text { color: var(--primary-color); font-family: monospace; font-size: 1.05rem; }
     .category-text { font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
     
     .type-badge-container { display: flex; align-items: center; gap: 8px; }

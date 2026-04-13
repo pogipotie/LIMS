@@ -258,7 +258,7 @@ export class DeleteConfirmDialogComponent {
     
     .form-card, .table-card { border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important; overflow: hidden; }
     .custom-card-header { padding: 20px; align-items: center; background-color: white; }
-    .header-icon { display: flex; justify-content: center; align-items: center; background-color: #e8eaf6; border-radius: 50%; color: var(--primary-color, #3f51b5); margin-right: 16px; }
+    .header-icon { display: flex; justify-content: center; align-items: center; background-color: rgba(var(--primary-color-rgb, 63, 81, 181), 0.1); border-radius: 50%; color: var(--primary-color); margin-right: 16px; }
 
     .form-content { padding: 24px !important; }
     .full-width { width: 100%; margin-bottom: 16px; }
