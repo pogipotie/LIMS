@@ -13,9 +13,11 @@ CREATE OR REPLACE FUNCTION public.create_staff_user(
 DECLARE
   new_user_id uuid;
 BEGIN
-  -- Insert into auth.users manually. 
-  -- (In Supabase, this is normally handled by their GoTrue server, so we must mock the necessary fields)
-  -- This approach uses the built-in crypt function for the password.
+  -- Ensure the person calling this is an admin
+  IF (SELECT role FROM public.user_roles WHERE user_id = auth.uid()) != 'admin' THEN
+    RAISE EXCEPTION 'Only administrators can create users';
+  END IF;
+
   INSERT INTO auth.users (
     instance_id,
     id,
@@ -43,6 +45,27 @@ BEGIN
     '{}',
     false
   ) RETURNING id INTO new_user_id;
+
+  -- Create a matching identity in auth.identities to prevent the GoTrue "Database error querying schema"
+  INSERT INTO auth.identities (
+    id,
+    user_id,
+    provider_id,
+    identity_data,
+    provider,
+    last_sign_in_at,
+    created_at,
+    updated_at
+  ) VALUES (
+    gen_random_uuid(),
+    new_user_id,
+    new_user_id::text, -- provider_id is often the user_id for email/password auth
+    format('{"sub":"%s","email":"%s"}', new_user_id, email)::jsonb,
+    'email',
+    current_timestamp,
+    current_timestamp,
+    current_timestamp
+  );
 
   -- The trigger we created in 004_rbac_schema.sql will automatically
   -- add this user to the public.user_roles table as 'staff'.
