@@ -26,4 +26,19 @@ export class UserService {
     
     if (error) throw error;
   }
+
+  async deleteUser(userId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('delete_user', {
+      target_user_id: userId
+    });
+    if (error) throw error;
+  }
+
+  async updateUserRole(userId: string, newRole: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('update_user_role', {
+      target_user_id: userId,
+      new_role: newRole
+    });
+    if (error) throw error;
+  }
 }

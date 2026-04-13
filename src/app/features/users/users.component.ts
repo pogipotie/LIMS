@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -8,14 +8,68 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDialogModule, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { UserService } from '../../core/services/user.service';
+import { AuthService } from '../../core/services/auth.service';
+
+@Component({
+  selector: 'app-delete-user-dialog',
+  standalone: true,
+  imports: [CommonModule, MatButtonModule, MatDialogModule, MatIconModule],
+  template: `
+    <div class="delete-dialog-container">
+      <div class="dialog-header bg-warn-light">
+        <div class="icon-circle warn-glow">
+          <mat-icon color="warn">warning_amber</mat-icon>
+        </div>
+        <h2 mat-dialog-title class="dialog-title">Delete System User?</h2>
+      </div>
+      
+      <mat-dialog-content class="dialog-content">
+        <p class="primary-text">
+          You are about to permanently delete the user ID: <strong>{{ data.userId | slice:0:8 }}...</strong>
+        </p>
+        <p class="secondary-text" style="color: #e65100; font-size: 0.9rem;">
+          This action will immediately revoke their access to the system. This cannot be undone.
+        </p>
+      </mat-dialog-content>
+      <mat-dialog-actions class="dialog-actions">
+        <button mat-stroked-button mat-dialog-close class="action-btn">Cancel</button>
+        <button mat-flat-button color="warn" [mat-dialog-close]="true" class="action-btn delete-btn">
+          <mat-icon>delete_forever</mat-icon> Yes, Delete
+        </button>
+      </mat-dialog-actions>
+    </div>
+  `,
+  styles: [`
+    .delete-dialog-container { overflow: hidden; }
+    .dialog-header { display: flex; flex-direction: column; align-items: center; padding: 32px 24px 16px; background: linear-gradient(to bottom, #fff5f5, white); }
+    .icon-circle { width: 64px; height: 64px; border-radius: 50%; background: #ffebee; display: flex; justify-content: center; align-items: center; margin-bottom: 16px; }
+    .icon-circle mat-icon { font-size: 32px; width: 32px; height: 32px; }
+    .warn-glow { box-shadow: 0 0 20px rgba(244, 67, 54, 0.2); border: 4px solid white; }
+    .dialog-title { margin: 0; font-size: 1.5rem; font-weight: 600; color: #2c3e50; }
+    .dialog-content { padding: 0 32px 24px !important; text-align: center; overflow: hidden; }
+    .primary-text { font-size: 1.1rem; color: #34495e; margin-bottom: 12px; line-height: 1.5; }
+    .dialog-actions { padding: 16px 32px 32px !important; display: flex; gap: 16px; justify-content: center; margin-bottom: 0; }
+    .action-btn { padding: 8px 24px; font-size: 1rem; border-radius: 8px; height: 48px; min-width: 140px; }
+    .delete-btn { box-shadow: 0 4px 12px rgba(244, 67, 54, 0.2); }
+  `]
+})
+export class DeleteUserDialogComponent {
+  constructor(
+    public dialogRef: MatDialogRef<DeleteUserDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { userId: string }
+  ) {}
+}
 
 @Component({
   selector: 'app-users',
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule,
-    MatInputModule, MatButtonModule, MatIconModule, MatTableModule, MatDividerModule
+    MatInputModule, MatButtonModule, MatIconModule, MatTableModule, 
+    MatDividerModule, MatMenuModule, MatDialogModule
   ],
   template: `
     <div class="page-container">
@@ -44,7 +98,10 @@ import { UserService } from '../../core/services/user.service';
                 
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Password</mat-label>
-                  <input matInput type="password" formControlName="password" required>
+                  <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" required>
+                  <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword" type="button">
+                    <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                  </button>
                   <mat-hint>Must be at least 6 characters.</mat-hint>
                 </mat-form-field>
 
@@ -87,6 +144,26 @@ import { UserService } from '../../core/services/user.service';
                   <td mat-cell *matCellDef="let element" class="text-muted"> {{element.created_at | date}} </td>
                 </ng-container>
 
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef style="text-align: right;"> Actions </th>
+                  <td mat-cell *matCellDef="let element" style="text-align: right;">
+                    <button mat-icon-button [matMenuTriggerFor]="menu" *ngIf="element.user_id !== currentUserId">
+                      <mat-icon>more_vert</mat-icon>
+                    </button>
+                    <mat-menu #menu="matMenu">
+                      <button mat-menu-item (click)="changeRole(element.user_id, element.role === 'admin' ? 'staff' : 'admin')">
+                        <mat-icon>swap_horiz</mat-icon>
+                        <span>Make {{element.role === 'admin' ? 'Staff' : 'Admin'}}</span>
+                      </button>
+                      <button mat-menu-item (click)="deleteUser(element.user_id)" style="color: #c62828;">
+                        <mat-icon color="warn">delete_outline</mat-icon>
+                        <span>Delete Account</span>
+                      </button>
+                    </mat-menu>
+                    <span *ngIf="element.user_id === currentUserId" class="text-muted" style="font-size: 0.8rem; padding-right: 12px;">(You)</span>
+                  </td>
+                </ng-container>
+
                 <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
               </table>
@@ -120,10 +197,17 @@ import { UserService } from '../../core/services/user.service';
 export class UsersComponent implements OnInit {
   userForm: FormGroup;
   isSubmitting = false;
+  hidePassword = true;
   users: any[] = [];
-  displayedColumns: string[] = ['id', 'role', 'date'];
+  displayedColumns: string[] = ['id', 'role', 'date', 'actions'];
+  currentUserId: string | null = null;
 
-  constructor(private fb: FormBuilder, private userService: UserService) {
+  constructor(
+    private fb: FormBuilder, 
+    private userService: UserService,
+    private authService: AuthService,
+    private dialog: MatDialog
+  ) {
     this.userForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
@@ -131,6 +215,8 @@ export class UsersComponent implements OnInit {
   }
 
   async ngOnInit() {
+    const session = await this.authService.session;
+    this.currentUserId = session.data.session?.user.id || null;
     await this.loadUsers();
   }
 
@@ -140,6 +226,38 @@ export class UsersComponent implements OnInit {
     } catch (e) {
       console.error('Failed to load users', e);
     }
+  }
+
+  async changeRole(userId: string, newRole: string) {
+    if (confirm(`Are you sure you want to change this user's role to ${newRole.toUpperCase()}?`)) {
+      try {
+        await this.userService.updateUserRole(userId, newRole);
+        await this.loadUsers();
+      } catch (error) {
+        console.error('Error changing role:', error);
+        alert('Failed to change user role.');
+      }
+    }
+  }
+
+  deleteUser(userId: string) {
+    const dialogRef = this.dialog.open(DeleteUserDialogComponent, {
+      width: '95vw',
+      maxWidth: '450px',
+      data: { userId }
+    });
+
+    dialogRef.afterClosed().subscribe(async (confirmed) => {
+      if (confirmed) {
+        try {
+          await this.userService.deleteUser(userId);
+          await this.loadUsers();
+        } catch (error) {
+          console.error('Error deleting user:', error);
+          alert('Failed to delete the user. Make sure you ran the 007 SQL migration.');
+        }
+      }
+    });
   }
 
   async createUser() {
