@@ -91,7 +91,22 @@ export class DeleteUserDialogComponent {
             <mat-divider></mat-divider>
             
             <mat-card-content class="form-content">
+              <div *ngIf="errorMessage" class="error-banner">
+                <mat-icon>error_outline</mat-icon>
+                <span>{{ errorMessage }}</span>
+              </div>
+              <div *ngIf="successMessage" class="success-banner">
+                <mat-icon>check_circle_outline</mat-icon>
+                <span>{{ successMessage }}</span>
+              </div>
+
               <form [formGroup]="userForm" (ngSubmit)="createUser()">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Full Name</mat-label>
+                  <input matInput type="text" formControlName="fullName" placeholder="John Doe" required>
+                  <mat-error *ngIf="userForm.get('fullName')?.hasError('required')">Full name is required</mat-error>
+                </mat-form-field>
+
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Email Address</mat-label>
                   <input matInput type="email" formControlName="email" placeholder="staff@university.edu" required>
@@ -129,9 +144,26 @@ export class DeleteUserDialogComponent {
             <div class="table-responsive">
               <table mat-table [dataSource]="users" class="custom-table">
                 
-                <ng-container matColumnDef="id">
-                  <th mat-header-cell *matHeaderCellDef> User ID </th>
-                  <td mat-cell *matCellDef="let element"> <span style="font-family: monospace;">{{element.user_id | slice:0:8}}...</span> </td>
+                <ng-container matColumnDef="name">
+                  <th mat-header-cell *matHeaderCellDef> Name </th>
+                  <td mat-cell *matCellDef="let element">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span style="font-weight: 600; color: #2c3e50;">{{element.full_name || 'No Name'}}</span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #7f8c8d; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">email</mat-icon>
+                      {{element.email || (element.user_id | slice:0:8) + '...'}}
+                    </div>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef> Status </th>
+                  <td mat-cell *matCellDef="let element">
+                    <span *ngIf="element.email_confirmed_at !== null && element.email_confirmed_at !== undefined" class="status-chip verified" title="Email Verified"><mat-icon>check_circle</mat-icon> Verified</span>
+                    <span *ngIf="element.email !== undefined && (element.email_confirmed_at === null || element.email_confirmed_at === undefined)" class="status-chip pending" title="Pending Email Confirmation"><mat-icon>schedule</mat-icon> Pending</span>
+                    <span *ngIf="element.email === undefined" class="text-muted" style="font-size: 0.8rem;">Unknown</span>
+                  </td>
                 </ng-container>
 
                 <ng-container matColumnDef="role">
@@ -157,10 +189,19 @@ export class DeleteUserDialogComponent {
                         <mat-icon>swap_horiz</mat-icon>
                         <span>Make {{element.role === 'admin' ? 'Staff' : 'Admin'}}</span>
                       </button>
-                      <button mat-menu-item (click)="resetPassword(element.user_id)">
+
+                      <!-- If Email is Verified: Show Reset Password -->
+                      <button mat-menu-item *ngIf="element.email_confirmed_at !== null && element.email_confirmed_at !== undefined" (click)="resetPassword(element.user_id)">
                         <mat-icon color="primary">vpn_key</mat-icon>
                         <span>Reset Password</span>
                       </button>
+
+                      <!-- If Email is Pending: Show Resend Confirmation -->
+                      <button mat-menu-item *ngIf="element.email !== undefined && (element.email_confirmed_at === null || element.email_confirmed_at === undefined)" (click)="resendConfirmation(element.email)">
+                        <mat-icon color="accent" style="color: #ff9800;">mark_email_unread</mat-icon>
+                        <span>Resend Confirmation</span>
+                      </button>
+
                       <button mat-menu-item (click)="deleteUser(element.user_id)" style="color: #c62828;">
                         <mat-icon color="warn">delete_outline</mat-icon>
                         <span>Delete Account</span>
@@ -197,6 +238,14 @@ export class DeleteUserDialogComponent {
     .role-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
     .role-badge.admin { background: #e8eaf6; color: #3f51b5; border: 1px solid #c5cae9; }
     .role-badge.staff { background: #e0f2f1; color: #00796b; border: 1px solid #b2dfdb; }
+    .error-banner { background-color: #fde8e8; color: #c81e1e; padding: 12px 16px; border-radius: 6px; display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.4; word-break: break-word; }
+    .error-banner mat-icon { font-size: 20px; width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; }
+    .success-banner { background-color: #def7ec; color: #03543f; padding: 12px 16px; border-radius: 6px; display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.4; word-break: break-word; }
+    .success-banner mat-icon { font-size: 20px; width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; }
+    .status-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+    .status-chip mat-icon { font-size: 12px; width: 12px; height: 12px; }
+    .status-chip.verified { background-color: #e6f4ea; color: #1e8e3e; border: 1px solid #ceead6; }
+    .status-chip.pending { background-color: #fef7e0; color: #e67c73; border: 1px solid #fde293; }
     @media (max-width: 600px) { .page-container { padding: 16px; } }
   `]
 })
@@ -204,8 +253,10 @@ export class UsersComponent implements OnInit {
   userForm: FormGroup;
   isSubmitting = false;
   hidePassword = true;
+  errorMessage = '';
+  successMessage = '';
   users: any[] = [];
-  displayedColumns: string[] = ['id', 'role', 'date', 'actions'];
+  displayedColumns: string[] = ['name', 'status', 'role', 'date', 'actions'];
   currentUserId: string | null = null;
 
   constructor(
@@ -217,6 +268,7 @@ export class UsersComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {
     this.userForm = this.fb.group({
+      fullName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
@@ -231,6 +283,7 @@ export class UsersComponent implements OnInit {
   async loadUsers() {
     try {
       this.users = await this.userService.getAllUsers();
+      console.log('Loaded users data:', this.users); // Temporary debug log to check data
     } catch (e) {
       console.error('Failed to load users', e);
     } finally {
@@ -247,6 +300,32 @@ export class UsersComponent implements OnInit {
         console.error('Error changing role:', error);
         alert('Failed to change user role.');
       }
+    }
+  }
+
+  async resendConfirmation(email: string) {
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.cdr.detectChanges();
+    try {
+      await this.userService.resendConfirmationEmail(email);
+      this.successMessage = `Confirmation email successfully resent to ${email}`;
+      
+      // Auto dismiss
+      setTimeout(() => {
+        this.successMessage = '';
+        this.cdr.detectChanges();
+      }, 4000);
+    } catch (error: any) {
+      console.error('Error resending confirmation:', error);
+      
+      if (error.code === 'over_email_send_rate_limit' || error.message?.includes('rate limit')) {
+        this.errorMessage = 'Too many requests. Please wait a moment before trying to resend the confirmation email.';
+      } else {
+        this.errorMessage = 'Failed to resend confirmation email: ' + (error.message || 'Unknown error');
+      }
+    } finally {
+      this.cdr.detectChanges();
     }
   }
 
@@ -297,21 +376,53 @@ export class UsersComponent implements OnInit {
 
   async createUser() {
     if (this.userForm.valid) {
+      this.errorMessage = '';
+      this.successMessage = '';
       this.isSubmitting = true;
+      this.cdr.detectChanges(); // Force UI update
+      
       try {
-        const { email, password } = this.userForm.value;
-        await this.userService.createStaffUser(email, password);
-        alert('Staff account created successfully!');
+        const { fullName, email, password } = this.userForm.value;
+        await this.userService.createStaffUser(email, password, fullName);
+        
+        this.successMessage = 'Staff account created! Please remind them to check their inbox to confirm their email.';
         this.userForm.reset();
         Object.keys(this.userForm.controls).forEach(key => {
           this.userForm.get(key)?.setErrors(null);
         });
         await this.loadUsers();
+        
+        // Clear success message after 4 seconds
+        setTimeout(() => {
+          this.successMessage = '';
+          this.cdr.detectChanges();
+        }, 4000);
       } catch (error: any) {
         console.error('Error creating user:', error);
-        alert('Failed to create account. Make sure you ran the 006 SQL migration in Supabase.');
+        
+        let errorMsg = 'An unknown error occurred';
+        if (typeof error === 'string') {
+          errorMsg = error;
+        } else if (error && typeof error === 'object') {
+          if (error.message) {
+            try {
+              const parsed = JSON.parse(error.message);
+              errorMsg = parsed.message || error.message;
+              error = parsed; 
+            } catch (e) {
+              errorMsg = error.message;
+            }
+          }
+        }
+
+        if (error.code === 'over_email_send_rate_limit' || errorMsg.includes('rate limit')) {
+          this.errorMessage = 'Too many requests. Please wait a moment before trying to create another account.';
+        } else {
+          this.errorMessage = 'Failed to create account: ' + errorMsg;
+        }
       } finally {
         this.isSubmitting = false;
+        this.cdr.detectChanges(); // Force UI update
       }
     }
   }

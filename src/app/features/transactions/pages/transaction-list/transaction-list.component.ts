@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
@@ -10,9 +10,58 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TransactionService } from '../../../../core/services/transaction.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Transaction } from '../../../../shared/models/transaction.model';
+
+@Component({
+  selector: 'app-transaction-confirm-dialog',
+  standalone: true,
+  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
+  template: `
+    <div class="dialog-container">
+      <div class="dialog-header" [ngClass]="data.isError ? 'bg-warn-light' : 'bg-primary-light'">
+        <div class="icon-circle" [ngClass]="data.isError ? 'warn-glow' : 'primary-glow'">
+          <mat-icon [color]="data.isError ? 'warn' : 'primary'">{{ data.icon || (data.isError ? 'error_outline' : 'help_outline') }}</mat-icon>
+        </div>
+        <h2 mat-dialog-title class="dialog-title">{{ data.title }}</h2>
+      </div>
+      
+      <mat-dialog-content class="dialog-content">
+        <p class="primary-text">{{ data.message }}</p>
+      </mat-dialog-content>
+      
+      <mat-dialog-actions class="dialog-actions">
+        <button *ngIf="data.showCancel" mat-stroked-button mat-dialog-close class="action-btn">Cancel</button>
+        <button mat-flat-button [color]="data.isError ? 'warn' : 'primary'" [mat-dialog-close]="true" class="action-btn">
+          {{ data.confirmText || 'OK' }}
+        </button>
+      </mat-dialog-actions>
+    </div>
+  `,
+  styles: [`
+    .dialog-container { overflow: hidden; }
+    .dialog-header { display: flex; flex-direction: column; align-items: center; padding: 32px 24px 16px; background: linear-gradient(to bottom, #f8f9fa, white); }
+    .bg-warn-light { background: linear-gradient(to bottom, #fff5f5, white); }
+    .bg-primary-light { background: linear-gradient(to bottom, #e8eaf6, white); }
+    .icon-circle { width: 64px; height: 64px; border-radius: 50%; background: #f0f0f0; display: flex; justify-content: center; align-items: center; margin-bottom: 16px; }
+    .icon-circle mat-icon { font-size: 32px; width: 32px; height: 32px; }
+    .warn-glow { background: #ffebee; box-shadow: 0 0 20px rgba(244, 67, 54, 0.2); border: 4px solid white; }
+    .primary-glow { background: #e8eaf6; box-shadow: 0 0 20px rgba(63, 81, 181, 0.2); border: 4px solid white; }
+    .dialog-title { margin: 0; font-size: 1.5rem; font-weight: 600; color: #2c3e50; text-align: center; }
+    .dialog-content { padding: 0 32px 24px !important; text-align: center; overflow: hidden; }
+    .primary-text { font-size: 1.1rem; color: #34495e; margin-bottom: 12px; line-height: 1.5; }
+    .dialog-actions { padding: 16px 32px 32px !important; display: flex; gap: 16px; justify-content: center; margin-bottom: 0; }
+    .action-btn { padding: 8px 24px; font-size: 1rem; border-radius: 8px; height: 48px; min-width: 120px; }
+  `]
+})
+export class TransactionConfirmDialogComponent {
+  constructor(
+    public dialogRef: MatDialogRef<TransactionConfirmDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { title: string, message: string, isError?: boolean, showCancel?: boolean, confirmText?: string, icon?: string }
+  ) {}
+}
 
 @Component({
   selector: 'app-transaction-list',
@@ -20,7 +69,7 @@ import { Transaction } from '../../../../shared/models/transaction.model';
   imports: [
     CommonModule, RouterModule, MatTableModule, MatButtonModule, 
     MatIconModule, MatCardModule, MatInputModule, MatFormFieldModule,
-    MatPaginatorModule, MatSortModule, MatTooltipModule
+    MatPaginatorModule, MatSortModule, MatTooltipModule, MatDialogModule
   ],
   template: `
     <div class="page-container">
@@ -232,7 +281,7 @@ export class TransactionListComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private transactionService: TransactionService, private authService: AuthService) {
+  constructor(private transactionService: TransactionService, private authService: AuthService, private dialog: MatDialog) {
     this.dataSource = new MatTableDataSource<Transaction>([]);
     
     // Custom filter predicate to search nested livestock object
@@ -284,15 +333,38 @@ export class TransactionListComponent implements OnInit {
   }
   
   async approve(id: string) {
-    if (confirm('Approve this transaction?')) {
-      try {
-        await this.transactionService.updateValidationStatus(id, 'approved');
-        await this.loadTransactions(); // Refresh
-      } catch (err) {
-        console.error('Failed to approve transaction', err);
-        alert('Approval failed.');
+    const dialogRef = this.dialog.open(TransactionConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Approve Transaction?',
+        message: 'Are you sure you want to approve this transaction?',
+        showCancel: true,
+        confirmText: 'Approve',
+        icon: 'check_circle_outline',
+        isError: false
       }
-    }
+    });
+
+    dialogRef.afterClosed().subscribe(async (result) => {
+      if (result) {
+        try {
+          await this.transactionService.updateValidationStatus(id, 'approved');
+          await this.loadTransactions(); // Refresh
+        } catch (err) {
+          console.error('Failed to approve transaction', err);
+          this.dialog.open(TransactionConfirmDialogComponent, {
+            width: '400px',
+            data: {
+              title: 'Error',
+              message: 'Failed to approve the transaction. Please try again.',
+              isError: true,
+              showCancel: false,
+              confirmText: 'Close'
+            }
+          });
+        }
+      }
+    });
   }
   
   getTransactionIcon(type: string): string {

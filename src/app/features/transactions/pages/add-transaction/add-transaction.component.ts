@@ -10,9 +10,11 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TransactionService } from '../../../../core/services/transaction.service';
 import { LivestockService } from '../../../../core/services/livestock.service';
 import { Livestock } from '../../../../shared/models/livestock.model';
+import { TransactionConfirmDialogComponent } from '../transaction-list/transaction-list.component';
 
 @Component({
   selector: 'app-add-transaction',
@@ -20,7 +22,7 @@ import { Livestock } from '../../../../shared/models/livestock.model';
   imports: [
     CommonModule, ReactiveFormsModule, RouterModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
-    MatDatepickerModule, MatNativeDateModule, MatButtonModule, MatIconModule
+    MatDatepickerModule, MatNativeDateModule, MatButtonModule, MatIconModule, MatDialogModule
   ],
   template: `
     <div class="page-container">
@@ -140,7 +142,8 @@ export class AddTransactionComponent implements OnInit {
     private fb: FormBuilder,
     private transactionService: TransactionService,
     private livestockService: LivestockService,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog
   ) {
     this.transactionForm = this.fb.group({
       livestock_id: ['', Validators.required],
@@ -187,7 +190,16 @@ export class AddTransactionComponent implements OnInit {
             formValue.document_url = url;
           } catch (uploadErr) {
             console.error('File upload failed:', uploadErr);
-            alert('File upload failed. Transaction will be saved without document.');
+            this.dialog.open(TransactionConfirmDialogComponent, {
+              width: '400px',
+              data: {
+                title: 'Upload Warning',
+                message: 'File upload failed. Transaction will be saved without document.',
+                isError: true,
+                showCancel: false,
+                confirmText: 'OK'
+              }
+            });
           }
         }
         
@@ -198,7 +210,16 @@ export class AddTransactionComponent implements OnInit {
         this.router.navigate(['/transactions']);
       } catch (error: any) {
         console.error('Error creating transaction:', error);
-        alert('Failed to save transaction.');
+        this.dialog.open(TransactionConfirmDialogComponent, {
+          width: '400px',
+          data: {
+            title: 'Error',
+            message: 'Failed to save transaction. Please try again.',
+            isError: true,
+            showCancel: false,
+            confirmText: 'Close'
+          }
+        });
       } finally {
         this.loading = false;
       }

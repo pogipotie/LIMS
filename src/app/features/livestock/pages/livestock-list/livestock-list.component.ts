@@ -148,8 +148,8 @@ export class EditLivestockDialogComponent {
     .dialog-content { padding: 0 32px 24px !important; text-align: center; overflow: hidden; }
     .primary-text { font-size: 1.1rem; color: #34495e; margin-bottom: 24px; line-height: 1.5; }
     .warning-box { background: #fff8e1; border-radius: 8px; padding: 12px 16px; display: flex; align-items: flex-start; gap: 12px; text-align: left; }
-    .info-icon { color: #f57c00; font-size: 20px; width: 20px; height: 20px; margin-top: 2px; }
-    .secondary-text { margin: 0; font-size: 0.9rem; color: #e65100; line-height: 1.4; }
+    .info-icon { color: #f57c00; font-size: 20px; width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; }
+    .secondary-text { margin: 0; font-size: 0.9rem; color: #e65100; line-height: 1.4; word-break: break-word; }
     .dialog-actions { padding: 16px 32px 32px !important; display: flex; gap: 16px; justify-content: center; margin-bottom: 0; }
     .action-btn { padding: 8px 24px; font-size: 1rem; border-radius: 8px; height: 48px; min-width: 140px; }
     .delete-btn { box-shadow: 0 4px 12px rgba(244, 67, 54, 0.2); }

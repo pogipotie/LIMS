@@ -8,23 +8,33 @@ export class UserService {
   constructor(private supabase: SupabaseService) {}
 
   async getAllUsers(): Promise<any[]> {
-    // We fetch from user_roles and join with auth.users (if possible, but Supabase restricts auth schema).
-    // Instead, we'll fetch just the user_roles and we can see their IDs and Roles.
-    // For a real production app, you'd use an Edge Function with Service Key to get emails.
-    // For now, we will just fetch the roles we have.
-    const { data, error } = await this.supabase.client
-      .from('user_roles')
-      .select('*');
-    if (error) throw error;
+    // Attempt to use the new RPC that joins user_roles with auth.users to get email & confirmation status
+    const { data, error } = await this.supabase.client.rpc('get_users_with_status');
+    
+    if (error) {
+      console.warn('RPC get_users_with_status failed. Falling back to user_roles table.', error);
+      // Fallback for older setups before the migration
+      const { data: fallbackData, error: fallbackError } = await this.supabase.client
+        .from('user_roles')
+        .select('*');
+      if (fallbackError) throw fallbackError;
+      return fallbackData || [];
+    }
+    
     return data || [];
   }
 
-  async createStaffUser(email: string, password: string): Promise<void> {
+  async createStaffUser(email: string, password: string, fullName: string): Promise<void> {
     // We are switching to the standard Supabase Auth API to avoid GoTrue schema corruption.
     // This will respect the "Confirm Email" setting in your Supabase Dashboard.
     const { data, error } = await this.supabase.client.auth.signUp({
       email: email,
       password: password,
+      options: {
+        data: {
+          full_name: fullName
+        }
+      }
     });
     
     if (error) {
@@ -52,6 +62,14 @@ export class UserService {
 
   async sendPasswordResetEmail(email: string): Promise<void> {
     const { error } = await this.supabase.client.auth.resetPasswordForEmail(email);
+    if (error) throw error;
+  }
+
+  async resendConfirmationEmail(email: string): Promise<void> {
+    const { error } = await this.supabase.client.auth.resend({
+      type: 'signup',
+      email: email,
+    });
     if (error) throw error;
   }
 
