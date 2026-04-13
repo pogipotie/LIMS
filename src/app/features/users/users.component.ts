@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -206,7 +206,8 @@ export class UsersComponent implements OnInit {
     private fb: FormBuilder, 
     private userService: UserService,
     private authService: AuthService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {
     this.userForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -225,6 +226,8 @@ export class UsersComponent implements OnInit {
       this.users = await this.userService.getAllUsers();
     } catch (e) {
       console.error('Failed to load users', e);
+    } finally {
+      this.cdr.detectChanges(); // Force UI update
     }
   }
 
