@@ -18,13 +18,19 @@ export class UserService {
   }
 
   async createStaffUser(email: string, password: string): Promise<void> {
-    // Call the custom Postgres function we created
-    const { error } = await this.supabase.client.rpc('create_staff_user', {
+    // We are switching to the standard Supabase Auth API to avoid GoTrue schema corruption.
+    // This will respect the "Confirm Email" setting in your Supabase Dashboard.
+    const { data, error } = await this.supabase.client.auth.signUp({
       email: email,
-      password: password
+      password: password,
     });
     
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
+
+    // When the user signs up, the 004_rbac_schema.sql trigger will automatically
+    // create a 'staff' role entry in public.user_roles for them!
   }
 
   async deleteUser(userId: string): Promise<void> {
