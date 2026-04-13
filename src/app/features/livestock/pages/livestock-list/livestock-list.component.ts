@@ -148,6 +148,19 @@ import { Livestock } from '../../../../shared/models/livestock.model';
     .search-icon { margin-right: 8px; }
     
     .table-responsive { overflow-x: auto; }
+    
+    .table-responsive { overflow-x: auto; }
+    
+    @media (max-width: 600px) {
+      .page-container { padding: 16px; }
+      .welcome-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .header-actions { width: 100%; }
+      .add-btn { width: 100%; }
+      .table-header { flex-direction: column; align-items: stretch; padding: 16px 16px 0 16px; }
+      .search-bar { max-width: 100%; }
+      .table-controls { align-self: flex-end; }
+    }
+    
     .custom-table { width: 100%; }
     
     /* Table Styling overrides */

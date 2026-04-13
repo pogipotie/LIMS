@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -7,6 +7,9 @@ import { SidebarComponent } from './shared/components/sidebar/sidebar.component'
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { AuthService } from './core/services/auth.service';
 import { ThemeService } from './core/services/theme.service';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -15,14 +18,17 @@ import { ThemeService } from './core/services/theme.service';
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })
-export class App implements OnInit {
+export class App implements OnInit, OnDestroy {
   title = 'LIMS';
   isLoggedIn = false;
   sidebarCollapsed = false;
+  isMobile = false;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private authService: AuthService,
-    private themeService: ThemeService // Injected to initialize theme on startup
+    private themeService: ThemeService, // Injected to initialize theme on startup
+    private breakpointObserver: BreakpointObserver
   ) {}
 
   async ngOnInit() {
@@ -32,9 +38,28 @@ export class App implements OnInit {
     this.authService.onAuthStateChange((_event, session) => {
       this.isLoggedIn = !!session;
     });
+
+    this.breakpointObserver
+      .observe([Breakpoints.Handset, Breakpoints.Tablet])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(result => {
+        this.isMobile = result.matches;
+        if (this.isMobile) {
+          this.sidebarCollapsed = false; // Disable collapsed mode on mobile
+        }
+      });
   }
 
-  toggleSidebar() {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  toggleSidebar(sidenav: any) {
+    if (this.isMobile) {
+      sidenav.toggle();
+    } else {
+      this.sidebarCollapsed = !this.sidebarCollapsed;
+    }
   }
 }

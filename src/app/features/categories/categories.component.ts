@@ -270,6 +270,11 @@ export class DeleteConfirmDialogComponent {
     .actions-cell { text-align: center; }
     
     .empty-state { text-align: center; padding: 40px 20px; color: #95a5a6; }
+
+    @media (max-width: 600px) {
+      .page-container { padding: 16px; }
+      .welcome-header { margin-bottom: 16px; }
+    }
   `]
 })
 export class CategoriesComponent implements OnInit {

@@ -94,6 +94,12 @@ import { Livestock } from '../../../../shared/models/livestock.model';
     .form-row { display: flex; gap: 20px; }
     .full-width { width: 100%; margin-bottom: 15px; }
     .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    @media (max-width: 600px) {
+      .form-row { flex-direction: column; gap: 0; }
+      .actions { flex-direction: column; }
+      .actions button { width: 100%; margin-bottom: 8px; }
+    }
   `]
 })
 export class AddTransactionComponent implements OnInit {

@@ -141,6 +141,16 @@ import { Transaction } from '../../../../shared/models/transaction.model';
     .table-responsive { overflow-x: auto; }
     .custom-table { width: 100%; }
     
+    @media (max-width: 600px) {
+      .page-container { padding: 16px; }
+      .welcome-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .header-actions { width: 100%; }
+      .add-btn { width: 100%; }
+      .table-header { flex-direction: column; align-items: stretch; padding: 16px 16px 0 16px; }
+      .search-bar { max-width: 100%; }
+      .table-controls { align-self: flex-end; }
+    }
+    
     /* Table Styling overrides */
     th.mat-header-cell { font-size: 0.95rem; font-weight: 600; color: #34495e; background-color: #f8f9fa; text-transform: uppercase; letter-spacing: 0.5px; padding: 16px; }
     td.mat-cell { padding: 16px; border-bottom: 1px solid #f0f0f0; font-size: 0.95rem; color: #2c3e50; }

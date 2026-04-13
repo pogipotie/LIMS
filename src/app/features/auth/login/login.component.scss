@@ -99,6 +99,17 @@ mat-icon[matPrefix] {
   gap: 8px;
 }
 
+@media (max-width: 600px) {
+  .login-container {
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  .login-card {
+    padding: 24px 16px;
+    max-width: 100%;
+  }
+}
+
 .error-msg {
   color: #c62828;
   margin-bottom: 20px;

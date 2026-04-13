@@ -1,8 +1,8 @@
 <ng-container *ngIf="isLoggedIn; else loginTemplate">
-  <app-navbar (toggleSidebar)="toggleSidebar()"></app-navbar>
+  <app-navbar (toggleSidebar)="toggleSidebar(sidenav)"></app-navbar>
   <mat-sidenav-container class="sidenav-container" autosize>
-    <mat-sidenav mode="side" opened class="sidenav" [class.collapsed]="sidebarCollapsed">
-      <app-sidebar [isCollapsed]="sidebarCollapsed"></app-sidebar>
+    <mat-sidenav #sidenav [mode]="isMobile ? 'over' : 'side'" [opened]="!isMobile" class="sidenav" [class.collapsed]="!isMobile && sidebarCollapsed">
+      <app-sidebar [isCollapsed]="!isMobile && sidebarCollapsed" (navClick)="isMobile && sidenav.close()"></app-sidebar>
     </mat-sidenav>
     <mat-sidenav-content class="content">
       <router-outlet></router-outlet>

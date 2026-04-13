@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatListModule } from '@angular/material/list';
 import { RouterModule } from '@angular/router';
@@ -14,27 +14,27 @@ import { AuthService } from '../../../core/services/auth.service';
   template: `
     <div class="sidebar-wrapper">
       <mat-nav-list [class.collapsed]="isCollapsed">
-        <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Dashboard' : ''" matTooltipPosition="right">
+        <a mat-list-item routerLink="/dashboard" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Dashboard' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>dashboard</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Dashboard</span>
         </a>
-        <a mat-list-item routerLink="/livestock" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Livestock' : ''" matTooltipPosition="right">
+        <a mat-list-item routerLink="/livestock" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Livestock' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>pets</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Livestock</span>
         </a>
-        <a mat-list-item routerLink="/transactions" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Transactions' : ''" matTooltipPosition="right">
+        <a mat-list-item routerLink="/transactions" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Transactions' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>receipt_long</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Transactions</span>
         </a>
-        <a mat-list-item routerLink="/inventory" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Inventory' : ''" matTooltipPosition="right">
+        <a mat-list-item routerLink="/inventory" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Inventory' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>inventory_2</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Inventory</span>
         </a>
-        <a mat-list-item routerLink="/reports" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Reports' : ''" matTooltipPosition="right">
+        <a mat-list-item routerLink="/reports" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Reports' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>analytics</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Reports</span>
         </a>
-        <a mat-list-item routerLink="/data-management" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Data Management' : ''" matTooltipPosition="right">
+        <a mat-list-item routerLink="/data-management" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Data Management' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>storage</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Data Management</span>
         </a>
@@ -42,11 +42,11 @@ import { AuthService } from '../../../core/services/auth.service';
         <mat-divider></mat-divider>
         <div class="sidebar-subheader" *ngIf="!isCollapsed">System</div>
         
-        <a mat-list-item routerLink="/categories" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Manage Categories' : ''" matTooltipPosition="right">
+        <a mat-list-item routerLink="/categories" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Manage Categories' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>category</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Manage Categories</span>
         </a>
-        <a mat-list-item routerLink="/settings" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Global Settings' : ''" matTooltipPosition="right">
+        <a mat-list-item routerLink="/settings" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Global Settings' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>settings</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Global Settings</span>
         </a>
@@ -55,7 +55,7 @@ import { AuthService } from '../../../core/services/auth.service';
       <div class="sidebar-footer" [class.collapsed]="isCollapsed">
         <mat-divider></mat-divider>
         <mat-nav-list>
-          <a mat-list-item (click)="logout()" class="logout-btn" [matTooltip]="isCollapsed ? 'Logout' : ''" matTooltipPosition="right">
+          <a mat-list-item (click)="logout(); onNavClick()" class="logout-btn" [matTooltip]="isCollapsed ? 'Logout' : ''" matTooltipPosition="right">
             <mat-icon matListItemIcon color="warn">logout</mat-icon>
             <span matListItemTitle *ngIf="!isCollapsed" class="logout-text">Logout</span>
           </a>
@@ -169,8 +169,13 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class SidebarComponent {
   @Input() isCollapsed = false;
+  @Output() navClick = new EventEmitter<void>();
 
   constructor(private authService: AuthService) {}
+
+  onNavClick() {
+    this.navClick.emit();
+  }
 
   async logout() {
     await this.authService.signOut();

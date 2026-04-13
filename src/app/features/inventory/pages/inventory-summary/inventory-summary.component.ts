@@ -140,6 +140,14 @@ import { InventoryService } from '../../../../core/services/inventory.service';
     .total-content h3 { margin: 0 0 16px 0; font-weight: 400; opacity: 0.9; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
     .total-number { font-size: 6rem; font-weight: 700; margin: 0; line-height: 1; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
     .total-subtitle { margin: 16px 0 0 0; opacity: 0.7; font-size: 0.9rem; }
+
+    @media (max-width: 600px) {
+      .page-container { padding: 16px; }
+      .welcome-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .header-actions { width: 100%; }
+      .add-btn { width: 100%; }
+      .total-number { font-size: 4rem; }
+    }
   `]
 })
 export class InventorySummaryComponent implements OnInit {

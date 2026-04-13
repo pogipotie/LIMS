@@ -194,6 +194,16 @@ import { TransactionService } from '../../core/services/transaction.service';
     .full-width-btn { width: 100%; margin-bottom: 16px; padding: 8px 16px; display: flex; justify-content: flex-start; text-align: left; border-radius: 8px; }
     .full-width-btn:last-child { margin-bottom: 0; }
     .full-width-btn mat-icon { margin-right: 12px; }
+
+    @media (max-width: 600px) {
+      .dashboard-container { padding: 16px; }
+      .welcome-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .header-actions { width: 100%; }
+      .add-btn { width: 100%; }
+      .stats-grid { grid-template-columns: 1fr; gap: 16px; }
+      .timeline-header { flex-direction: column; align-items: flex-start; }
+      .timeline-item::before { left: 19px; }
+    }
   `]
 })
 export class DashboardComponent implements OnInit {

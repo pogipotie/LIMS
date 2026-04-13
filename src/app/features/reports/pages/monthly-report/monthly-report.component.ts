@@ -55,9 +55,13 @@ import { ReportService } from '../../../../core/services/report.service';
       <div class="report-wrapper" *ngIf="reportData && !loading">
         <mat-card class="report-preview">
           <mat-card-header class="custom-card-header">
-            <div mat-card-avatar class="header-icon"><mat-icon>assignment</mat-icon></div>
-            <mat-card-title>Report Preview: {{ months[reportData.month] }} {{ reportData.year }}</mat-card-title>
-            <mat-card-subtitle>Summary of all additions and deductions</mat-card-subtitle>
+            <div class="header-title-section">
+              <div mat-card-avatar class="header-icon"><mat-icon>assessment</mat-icon></div>
+              <div>
+                <mat-card-title>Report Preview</mat-card-title>
+                <mat-card-subtitle>Summary of all additions and deductions</mat-card-subtitle>
+              </div>
+            </div>
             <button mat-flat-button color="accent" (click)="exportPDF()" class="export-btn">
               <mat-icon>picture_as_pdf</mat-icon> Export to PDF
             </button>
@@ -141,9 +145,10 @@ import { ReportService } from '../../../../core/services/report.service';
     .report-wrapper { animation: fadeIn 0.3s ease-in-out; }
     .report-preview { border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.08) !important; overflow: hidden; }
     
-    .custom-card-header { padding: 24px; background-color: white; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; position: relative; }
+    .custom-card-header { padding: 24px; background-color: white; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .header-title-section { display: flex; align-items: center; }
     .header-icon { display: flex; justify-content: center; align-items: center; background-color: #e8eaf6; border-radius: 50%; color: #3f51b5; margin-right: 16px; }
-    .export-btn { position: absolute; right: 24px; padding: 4px 20px; border-radius: 8px; }
+    .export-btn { padding: 4px 20px; border-radius: 8px; }
     
     .report-content { padding: 32px 24px !important; background-color: #fafafa; }
     
@@ -172,6 +177,16 @@ import { ReportService } from '../../../../core/services/report.service';
     .deduction mat-icon { color: #c62828; }
     
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 600px) {
+      .page-container { padding: 16px; }
+      .filter-form { flex-direction: column; align-items: stretch; gap: 16px; }
+      .form-select { margin-bottom: 0; }
+      .generate-btn { width: 100%; }
+      .export-btn { width: 100%; }
+      .custom-card-header { flex-direction: column; align-items: flex-start; }
+      .metrics-grid { grid-template-columns: 1fr; }
+    }
   `]
 })
 export class MonthlyReportComponent implements OnInit {
