@@ -149,3 +149,28 @@ body.purple-green-theme {
 .sidebar-header {
   background-color: var(--primary-color) !important;
 }
+
+/* Global Print Styles to guarantee clean PDF exports */
+@media print {
+  app-sidebar, app-navbar, mat-sidenav, .mat-drawer-backdrop {
+    display: none !important;
+  }
+  mat-sidenav-container, mat-sidenav-content, .mat-drawer-content, .mat-drawer-container {
+    display: block !important;
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  body, html {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}

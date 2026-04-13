@@ -24,15 +24,14 @@ export class UserService {
     return data || [];
   }
 
-  async createStaffUser(email: string, password: string, fullName: string): Promise<void> {
-    // We are switching to the standard Supabase Auth API to avoid GoTrue schema corruption.
-    // This will respect the "Confirm Email" setting in your Supabase Dashboard.
+  async createUserAccount(email: string, password: string, fullName: string, role: string): Promise<void> {
     const { data, error } = await this.supabase.client.auth.signUp({
       email: email,
       password: password,
       options: {
         data: {
-          full_name: fullName
+          full_name: fullName,
+          role: role
         }
       }
     });
@@ -40,9 +39,6 @@ export class UserService {
     if (error) {
       throw error;
     }
-
-    // When the user signs up, the 004_rbac_schema.sql trigger will automatically
-    // create a 'staff' role entry in public.user_roles for them!
   }
 
   async deleteUser(userId: string): Promise<void> {

@@ -79,6 +79,9 @@ export class TransactionConfirmDialogComponent {
           <p class="text-muted">Review all historical events, sales, and purchases.</p>
         </div>
         <div class="header-actions">
+          <button mat-stroked-button color="primary" (click)="printReport()" class="print-btn" style="margin-right: 12px;">
+            <mat-icon>print</mat-icon> Print Report
+          </button>
           <button mat-flat-button color="primary" routerLink="add" class="add-btn">
             <mat-icon>add_circle_outline</mat-icon> Record Transaction
           </button>
@@ -271,6 +274,36 @@ export class TransactionConfirmDialogComponent {
     .empty-state { text-align: center; padding: 60px 20px; color: #95a5a6; }
     .empty-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.5; }
     .empty-state p { font-size: 1.1rem; margin: 0; }
+
+    /* Print Styles */
+    @media print {
+      /* Hide Angular Material Sidenav elements globally */
+      app-navbar, app-sidebar, mat-sidenav, .mat-drawer, .header-actions, .search-bar, .table-controls, mat-paginator, .actions-header, .actions-cell { display: none !important; }
+      
+      /* Reset layout constraints for printing */
+      mat-sidenav-container, mat-sidenav-content, .mat-drawer-content, .page-container, body, html { 
+        display: block !important; 
+        position: static !important; 
+        overflow: visible !important; 
+        height: auto !important; 
+        width: 100% !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        background: white !important; 
+      }
+      
+      .table-card { box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; }
+      .welcome-header { margin-bottom: 20px; text-align: center; display: block; }
+      .welcome-header::before { content: "LIMS Inventory & Transaction Report"; display: block; font-size: 24px; font-weight: bold; margin-bottom: 10px; color: black; }
+      .welcome-header h1 { font-size: 14pt !important; }
+      .text-muted { display: none; }
+      
+      th.mat-header-cell, td.mat-cell { color: black !important; padding: 8px !important; border-bottom: 1px solid #ccc !important; font-size: 10pt !important; }
+      .type-icon, .avatar-icon, .doc-link { display: none !important; } /* Hide heavy graphics/links */
+      .validation-badge, .status-badge { border: 1px solid #000 !important; color: #000 !important; background: transparent !important; }
+      
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
   `]
 })
 export class TransactionListComponent implements OnInit {
@@ -307,6 +340,10 @@ export class TransactionListComponent implements OnInit {
       this.displayedColumns = this.displayedColumns.filter(c => c !== 'actions');
     }
     await this.loadTransactions();
+  }
+
+  printReport() {
+    window.print();
   }
 
   async loadTransactions() {

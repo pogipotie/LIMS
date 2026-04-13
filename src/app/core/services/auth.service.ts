@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private currentRole: 'admin' | 'staff' | null = null;
+  private currentRole: 'admin' | 'staff' | 'custodian' | null = null;
 
   constructor(private supabaseService: SupabaseService, private router: Router) {
     this.initRole();
@@ -21,7 +21,7 @@ export class AuthService {
     return this.supabaseService.client.auth.getSession();
   }
 
-  async getUserRole(): Promise<'admin' | 'staff'> {
+  async getUserRole(): Promise<'admin' | 'staff' | 'custodian'> {
     if (this.currentRole) return this.currentRole;
     
     const { data: { session } } = await this.session;
@@ -30,7 +30,7 @@ export class AuthService {
     return await this.fetchRole(session.user.id);
   }
 
-  private async fetchRole(userId: string): Promise<'admin' | 'staff'> {
+  private async fetchRole(userId: string): Promise<'admin' | 'staff' | 'custodian'> {
     try {
       const { data, error } = await this.supabaseService.client
         .from('user_roles')
@@ -41,7 +41,7 @@ export class AuthService {
       if (error || !data) {
         this.currentRole = 'staff'; // Default to staff if no role found
       } else {
-        this.currentRole = data.role as 'admin' | 'staff';
+        this.currentRole = data.role as 'admin' | 'staff' | 'custodian';
       }
     } catch (e) {
       this.currentRole = 'staff';

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { LivestockService } from './livestock.service';
 import { TransactionService } from './transaction.service';
+import { LogbookService } from './logbook.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -8,7 +9,8 @@ import autoTable from 'jspdf-autotable';
 export class ReportService {
   constructor(
     private livestockService: LivestockService,
-    private transactionService: TransactionService
+    private transactionService: TransactionService,
+    private logbookService: LogbookService
   ) {}
 
   async generateMonthlyReport(year: number, month: number): Promise<any> {
@@ -46,6 +48,78 @@ export class ReportService {
     });
 
     return reportData;
+  }
+
+  async generateCustodianReport(period: 'weekly' | 'monthly'): Promise<any> {
+    const logbooks = await this.logbookService.getAll();
+    const livestock = await this.livestockService.getAll();
+
+    const now = new Date();
+    let startDate = new Date();
+    
+    if (period === 'weekly') {
+      startDate.setDate(now.getDate() - 7);
+    } else {
+      startDate.setMonth(now.getMonth() - 1);
+    }
+
+    const filteredLogbooks = logbooks.filter(l => new Date(l.log_date) >= startDate && new Date(l.log_date) <= now);
+    
+    const activeCount = livestock.filter(l => l.status === 'active').length;
+    const sickCount = filteredLogbooks.filter(l => l.health_status === 'sick' || l.health_status === 'injured').length;
+
+    return {
+      period,
+      startDate,
+      endDate: now,
+      totalLivestock: activeCount,
+      sickCount,
+      logbooks: filteredLogbooks
+    };
+  }
+
+  exportCustodianPDF(reportData: any) {
+    const doc = new jsPDF();
+    const periodName = reportData.period === 'weekly' ? 'Weekly' : 'Monthly';
+    
+    // Title
+    doc.setFontSize(18);
+    doc.text(`Custodian Health & Activity Report (${periodName})`, 14, 22);
+
+    // Subtitle Date Range
+    doc.setFontSize(10);
+    const startStr = new Date(reportData.startDate).toLocaleDateString();
+    const endStr = new Date(reportData.endDate).toLocaleDateString();
+    doc.text(`Period: ${startStr} to ${endStr}`, 14, 30);
+
+    // Summary section
+    doc.setFontSize(12);
+    doc.text(`Assigned Animals: ${reportData.totalLivestock}`, 14, 40);
+    doc.text(`Health Alerts (Sick/Injured) This Period: ${reportData.sickCount}`, 14, 48);
+
+    // Logbooks Table
+    doc.text('Health Logbook Entries', 14, 60);
+
+    const logBody = reportData.logbooks.map((l: any) => [
+      new Date(l.log_date).toLocaleDateString(),
+      l.livestock?.tag_number || 'N/A',
+      l.record_type || 'Routine Check',
+      l.health_status.toUpperCase(),
+      l.weight_kg ? `${l.weight_kg} kg` : '-',
+      l.treatment || '-',
+      l.remarks || ''
+    ]);
+
+    autoTable(doc, {
+      startY: 65,
+      head: [['Date', 'Tag No', 'Type', 'Status', 'Weight', 'Treatment', 'Remarks']],
+      body: logBody,
+      theme: 'striped',
+      headStyles: { fillColor: [63, 81, 181] } // Primary color
+    });
+
+    // Save PDF
+    doc.save(`LIMS_Custodian_${periodName}_Report_${endStr.replace(/\//g, '-')}.pdf`);
   }
 
   exportToPDF(reportData: any) {

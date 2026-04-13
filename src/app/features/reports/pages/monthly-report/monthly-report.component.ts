@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ReportService } from '../../../../core/services/report.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-monthly-report',
@@ -21,26 +22,45 @@ import { ReportService } from '../../../../core/services/report.service';
     <div class="page-container">
       <div class="welcome-header">
         <div>
-          <h1 class="mat-display-1" style="margin:0; font-weight: 600; color: #2c3e50;">Monthly Reports</h1>
-          <p class="text-muted">Generate and export historical data for your farm.</p>
+          <h1 class="mat-display-1" style="margin:0; font-weight: 600; color: #2c3e50;">
+            {{ isCustodian ? 'Health & Activity Reports' : 'Monthly Reports' }}
+          </h1>
+          <p class="text-muted">
+            {{ isCustodian ? 'Generate weekly or monthly health summaries for your assigned animals.' : 'Generate and export historical data for your farm.' }}
+          </p>
         </div>
       </div>
 
       <mat-card class="filter-card">
         <form [formGroup]="filterForm" (ngSubmit)="generateReport()" class="filter-form">
-          <mat-form-field appearance="outline" class="form-select">
-            <mat-label>Select Year</mat-label>
-            <mat-select formControlName="year">
-              <mat-option *ngFor="let y of years" [value]="y">{{y}}</mat-option>
-            </mat-select>
-          </mat-form-field>
+          
+          <!-- ADMIN / STAFF FILTER -->
+          <ng-container *ngIf="!isCustodian">
+            <mat-form-field appearance="outline" class="form-select">
+              <mat-label>Select Year</mat-label>
+              <mat-select formControlName="year">
+                <mat-option *ngFor="let y of years" [value]="y">{{y}}</mat-option>
+              </mat-select>
+            </mat-form-field>
 
-          <mat-form-field appearance="outline" class="form-select">
-            <mat-label>Select Month</mat-label>
-            <mat-select formControlName="month">
-              <mat-option *ngFor="let m of months; let i = index" [value]="i">{{m}}</mat-option>
-            </mat-select>
-          </mat-form-field>
+            <mat-form-field appearance="outline" class="form-select">
+              <mat-label>Select Month</mat-label>
+              <mat-select formControlName="month">
+                <mat-option *ngFor="let m of months; let i = index" [value]="i">{{m}}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </ng-container>
+
+          <!-- CUSTODIAN FILTER -->
+          <ng-container *ngIf="isCustodian">
+            <mat-form-field appearance="outline" class="form-select">
+              <mat-label>Report Period</mat-label>
+              <mat-select formControlName="period">
+                <mat-option value="weekly">Past 7 Days (Weekly)</mat-option>
+                <mat-option value="monthly">Past 30 Days (Monthly)</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </ng-container>
 
           <button mat-flat-button color="primary" type="submit" [disabled]="loading" class="generate-btn">
             <mat-icon>analytics</mat-icon> Generate Report
@@ -59,7 +79,7 @@ import { ReportService } from '../../../../core/services/report.service';
               <div mat-card-avatar class="header-icon"><mat-icon>assessment</mat-icon></div>
               <div>
                 <mat-card-title>Report Preview</mat-card-title>
-                <mat-card-subtitle>Summary of all additions and deductions</mat-card-subtitle>
+                <mat-card-subtitle>{{ isCustodian ? 'Summary of health logs and active herd' : 'Summary of all additions and deductions' }}</mat-card-subtitle>
               </div>
             </div>
             <button mat-flat-button color="accent" (click)="exportPDF()" class="export-btn">
@@ -72,13 +92,21 @@ import { ReportService } from '../../../../core/services/report.service';
               <div class="summary-stat">
                 <mat-icon color="primary">pets</mat-icon>
                 <div class="stat-text">
-                  <span class="stat-label">Active Inventory at End of Month</span>
+                  <span class="stat-label">Active Inventory</span>
                   <span class="stat-value">{{ reportData.totalLivestock }}</span>
+                </div>
+              </div>
+              
+              <div class="summary-stat" *ngIf="isCustodian">
+                <mat-icon color="warn">healing</mat-icon>
+                <div class="stat-text">
+                  <span class="stat-label">Health Alerts</span>
+                  <span class="stat-value" style="color: #c62828;">{{ reportData.sickCount }}</span>
                 </div>
               </div>
             </div>
             
-            <div class="metrics-grid">
+            <div class="metrics-grid" *ngIf="!isCustodian">
               <!-- Additions -->
               <div class="metric-box addition">
                 <div class="metric-header">
@@ -152,9 +180,9 @@ import { ReportService } from '../../../../core/services/report.service';
     
     .report-content { padding: 32px 24px !important; background-color: #fafafa; }
     
-    .summary-section { margin-bottom: 32px; display: flex; justify-content: center; }
-    .summary-stat { display: flex; align-items: center; gap: 16px; background: white; padding: 20px 40px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e0e0e0; }
-    .summary-stat mat-icon { font-size: 40px; width: 40px; height: 40px; }
+    .summary-section { margin-bottom: 32px; display: flex; justify-content: center; flex-wrap: wrap; gap: 24px; }
+    .summary-stat { display: flex; align-items: center; gap: 16px; background: white; padding: 20px 40px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e0e0e0; flex: 1 1 auto; min-width: 250px; max-width: 400px; justify-content: center; }
+    .summary-stat mat-icon { font-size: 40px; width: 40px; height: 40px; flex-shrink: 0; }
     .stat-text { display: flex; flex-direction: column; }
     .stat-label { font-size: 0.9rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
     .stat-value { font-size: 2.5rem; font-weight: 700; color: #2c3e50; line-height: 1.2; }
@@ -193,6 +221,7 @@ export class MonthlyReportComponent implements OnInit {
   filterForm: FormGroup;
   loading = false;
   reportData: any = null;
+  isCustodian = false;
 
   years: number[] = [];
   months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -200,6 +229,7 @@ export class MonthlyReportComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private reportService: ReportService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef
   ) {
     const currentYear = new Date().getFullYear();
@@ -209,19 +239,27 @@ export class MonthlyReportComponent implements OnInit {
     
     this.filterForm = this.fb.group({
       year: [currentYear],
-      month: [new Date().getMonth()]
+      month: [new Date().getMonth()],
+      period: ['weekly'] // default for custodian
     });
   }
 
-  ngOnInit() {
+  async ngOnInit() {
+    const role = await this.authService.getUserRole();
+    this.isCustodian = role === 'custodian';
     this.generateReport();
   }
 
   async generateReport() {
     this.loading = true;
     try {
-      const { year, month } = this.filterForm.value;
-      this.reportData = await this.reportService.generateMonthlyReport(year, month);
+      if (this.isCustodian) {
+        const { period } = this.filterForm.value;
+        this.reportData = await this.reportService.generateCustodianReport(period);
+      } else {
+        const { year, month } = this.filterForm.value;
+        this.reportData = await this.reportService.generateMonthlyReport(year, month);
+      }
     } catch (e) {
       console.error('Error generating report', e);
     } finally {
@@ -232,7 +270,11 @@ export class MonthlyReportComponent implements OnInit {
 
   exportPDF() {
     if (this.reportData) {
-      this.reportService.exportToPDF(this.reportData);
+      if (this.isCustodian) {
+        this.reportService.exportCustodianPDF(this.reportData);
+      } else {
+        this.reportService.exportToPDF(this.reportData);
+      }
     }
   }
 }

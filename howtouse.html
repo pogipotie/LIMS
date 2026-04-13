@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIMS - Comprehensive User Guide</title>
+    <style>
+        :root {
+            --primary-color: #3f51b5;
+            --accent-color: #ff4081;
+            --text-color: #2c3e50;
+            --muted-text: #7f8c8d;
+            --bg-color: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--muted-text);
+            font-size: 1.2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        h3 {
+            color: #34495e;
+            margin-top: 25px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .badge.admin { background-color: #e91e63; }
+        .badge.staff { background-color: #009688; }
+        .badge.warning { background-color: #f39c12; }
+        .badge.info { background-color: #3498db; }
+
+        .note {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .coa-rule {
+            background-color: #fdf2e9;
+            border-left: 4px solid #e67e22;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .scenario-box {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-left: 4px solid #9b59b6;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .scenario-box h4 {
+            color: #8e44ad;
+            margin-top: 0;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .scenario-box h4::before {
+            content: "💡";
+            font-size: 1.2rem;
+        }
+
+        code {
+            background-color: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #c0392b;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Livestock Inventory Management System (LIMS)</h1>
+        <p>A complete, COA-compliant guide to managing university livestock, custodians, transactions, and staff accounts.</p>
+    </div>
+
+    <!-- 1. System Roles -->
+    <div class="card">
+        <h2>1. Understanding System Roles</h2>
+        <p>LIMS utilizes Role-Based Access Control (RBAC) to ensure data security and accountability.</p>
+        <ul>
+            <li><span class="badge admin">Admin (Property Office)</span>: Has full access to the system. Can create user accounts, assign roles, approve or reject transactions, and execute permanent deletions (derecognition).</li>
+            <li><span class="badge staff">Staff (Data Encoder)</span>: Can view inventory, record daily logbooks, and submit "Pending" transactions (like births, deaths, or sales) for the Admin to approve. Cannot delete animals directly.</li>
+            <li><span class="badge info" style="background-color: #e65100;">Custodian (Farm Worker)</span>: Has restricted access. Can <strong>only</strong> see the animals specifically assigned to them. Can record daily health logbooks for their animals, but cannot access transactions, reports, or global inventory.</li>
+        </ul>
+    </div>
+
+    <!-- 2. System Configuration -->
+    <div class="card">
+        <h2>2. Initial System Setup (Admin Only)</h2>
+        <p>Before adding livestock, the Admin must set up the foundational data.</p>
+        
+        <h3>A. Manage Categories</h3>
+        <p>Navigate to <strong>Manage Categories</strong>. Add the types of livestock you will manage (e.g., <em>Cattle, Swine, Poultry, Goats</em>). You cannot add an animal without a category.</p>
+
+        <h3>B. System Users (Staff & Custodian Accounts)</h3>
+        <p>Navigate to <strong>System Users</strong> to grant access to your team.</p>
+        <ul>
+            <li><strong>Create Account:</strong> Select the Account Role (Staff vs Custodian), enter the member's Full Name, Email, and a temporary Password.</li>
+            <li><strong>Email Verification:</strong> The system sends a verification email to the staff. You can track their status in the "Registered Accounts" table (<span style="color:#27ae60; font-weight:bold;">Verified</span> or <span style="color:#e67e22; font-weight:bold;">Pending</span>).</li>
+            <li><strong>Resend Confirmation:</strong> If the staff didn't receive the email, click the 3-dot menu and select "Resend Confirmation".</li>
+            <li><strong>Password Reset:</strong> If a staff member forgets their password, select "Reset Password". An 8-digit OTP will be emailed to them. Enter that OTP into the system along with their new password to unlock their account.</li>
+        </ul>
+
+        <div class="scenario-box">
+            <h4>Scenario: Hiring a New Farm Manager</h4>
+            <p><strong>Situation:</strong> The university hires "Maria", a new manager for the swine facility.</p>
+            <p><strong>Action:</strong> The Admin goes to <strong>System Users</strong> and creates an account for Maria. The table shows Maria's status as <span style="color:#e67e22; font-weight:bold;">Pending</span>. Maria checks her email, clicks the verification link, and the Admin dashboard instantly updates her status to <span style="color:#27ae60; font-weight:bold;">Verified</span>. She can now log in.</p>
+            <p>Two months later, Maria forgets her password. The Admin clicks "Reset Password", asks Maria for the 8-digit OTP sent to her phone/email, types it in, and gives her a new password.</p>
+        </div>
+    </div>
+
+    <!-- 3. Livestock Inventory -->
+    <div class="card">
+        <h2>3. Managing Livestock Inventory</h2>
+        <p>The <strong>Livestock Inventory</strong> page tracks every animal currently active on the property.</p>
+        
+        <h3>Adding an Animal</h3>
+        <ul>
+            <li>Click <strong>Add New Livestock</strong>.</li>
+            <li>Enter the official <strong>Tag Number</strong>, Name (optional), Category, Gender, and assign a Custodian.</li>
+            <li>Once saved, the animal appears in your active inventory.</li>
+        </ul>
+
+        <h3>The "Show Derecognized" Toggle</h3>
+        <p>By default, the table only shows <strong>Active</strong> (living/present) animals to keep your workspace clean. If an animal is sold, dies, or is transferred, it disappears from this view.</p>
+        <ul>
+            <li>To view historical data, click the <strong>Show Derecognized</strong> switch at the top right.</li>
+            <li>This reveals inactive animals, tagging them with <span class="badge warning" style="background:#e74c3c;">DECEASED</span>, <span class="badge warning" style="background:#e67e22;">SOLD</span>, or <span class="badge warning" style="background:#16a085;">TRANSFERRED</span>.</li>
+        </ul>
+
+        <div class="scenario-box">
+            <h4>Scenario: Managing a Herd of 20 Goats</h4>
+            <p><strong>Situation:</strong> The university acquires a mixed herd of 20 goats (10 male, 10 female) of varying ages.</p>
+            <p><strong>Action:</strong> The staff member navigates to <strong>Add New Livestock</strong> and creates 20 individual records (e.g., `GT-001` to `GT-020`), specifying the exact age and gender for each goat. They assign them all to "Juan", the Goat Farm Custodian.</p>
+            <p><strong>Result:</strong> Juan can now log in, go to the Inventory, and type "Female" into the search bar. The system instantly filters the 20 goats down to just the 10 females so he can plan his breeding program without getting confused by the males or the swine.</p>
+        </div>
+    </div>
+
+    <!-- 4. Transactions (COA Compliance) -->
+    <div class="card">
+        <h2>4. Transactions & COA Compliance</h2>
+        <p>The <strong>Transactions</strong> module is the most critical part of LIMS. It strictly follows the Commission on Audit (COA) workflow for asset acquisition and derecognition.</p>
+        
+        <h3>A. Recording a Transaction (Acquisition)</h3>
+        <ul>
+            <li>Navigate to <strong>Transactions &gt; Record Transaction</strong>.</li>
+            <li>Select the Livestock, set the Type to <strong>Purchase</strong>, <strong>Birth</strong>, or <strong>Transfer In</strong>.</li>
+            <li>(Optional) Upload the Inventory Custodian Slip (ICS) as a Supporting Document.</li>
+            <li>Click Save. It will appear as <strong>PENDING</strong> until an Admin approves it.</li>
+        </ul>
+
+        <h3>B. Recording Mortality or Loss (Derecognition)</h3>
+        <div class="coa-rule">
+            <strong>Strict COA Rule (3-Day Limit):</strong> If an animal dies, is sold, or transferred out, it must be reported within <strong>3 calendar days</strong> of the event. If you enter a date older than 3 days, the system will flag the submission as a "Late Report."
+        </div>
+        <ul>
+            <li>Select the Livestock, set the Type to <strong>Death</strong>, <strong>Sale</strong>, or <strong>Transfer Out</strong>.</li>
+            <li><strong>Mandatory Document:</strong> The system will physically block you from saving unless you upload a Supporting Document (e.g., Veterinary Death Certificate, Notice of Loss, Official Receipt).</li>
+            <li>Click Save.</li>
+        </ul>
+
+        <h3>C. Property Office Approval (Auto-Derecognition)</h3>
+        <p>Staff can only submit transactions. Only an <strong>Admin</strong> can approve them.</p>
+        <ul>
+            <li>Admin reviews the transaction and the attached PDF/Image.</li>
+            <li>If valid, Admin clicks <strong>Approve</strong>.</li>
+            <li><strong>Automation:</strong> The moment a Death, Sale, or Transfer Out is approved, the system automatically removes that animal from the Active Livestock Inventory (changing its status to Deceased/Sold).</li>
+        </ul>
+
+        <h3>D. Printing the Monthly Report</h3>
+        <p>For physical signatures and audits, go to the Transaction Logs and click <strong>Print Report</strong>. The system will automatically hide all website menus and generate a clean, black-and-white A4 PDF table.</p>
+
+        <div class="scenario-box">
+            <h4>Scenario: Reporting a Dead Cow (COA Audit)</h4>
+            <p><strong>Situation:</strong> Cow <code>COW-005</code> dies from an illness. A state auditor will review the inventory next month.</p>
+            <p><strong>Action:</strong> Within 2 days of the death, the staff goes to <strong>Record Transaction</strong>, selects <code>COW-005</code>, and chooses <strong>"Death"</strong>. The system warns them that a document is strictly required. They take a photo of the Veterinary Death Certificate and upload it.</p>
+            <p><strong>Result:</strong> The Admin reviews the document and clicks <strong>Approve</strong>. The database trigger instantly removes <code>COW-005</code> from the Active Livestock Inventory (auto-derecognition). Next month, when the auditor asks where the cow is, the Admin toggles "Show Derecognized", finds <code>COW-005</code> with the red <strong>DECEASED</strong> badge, clicks on its history, and instantly downloads the attached Veterinary Certificate as proof.</p>
+        </div>
+    </div>
+
+    <!-- 5. Health Logbooks -->
+    <div class="card">
+        <h2>5. Regular Monitoring (Health Logbooks)</h2>
+        <p>The <strong>Health Logbook</strong> module is used by Custodians to log the daily/weekly condition of the animals.</p>
+        <ul>
+            <li>Select an animal from the list.</li>
+            <li>Log its current <strong>Weight (kg)</strong>, feed consumption, vaccinations, or general observations.</li>
+            <li>This maintains a historical timeline of the animal's growth and health leading up to a potential sale or harvest.</li>
+        </ul>
+
+        <div class="scenario-box">
+            <h4>Scenario: Weekly Weight Tracking</h4>
+            <p><strong>Situation:</strong> The farm needs to ensure the swine are gaining weight properly before sale.</p>
+            <p><strong>Action:</strong> The staff member weighs Pig `SW-012` on Monday and logs `45kg` in the Health Logbook. The following Monday, they weigh it again and log `48kg`.</p>
+            <p><strong>Result:</strong> The system builds a chronological history. If the pig gets sick and loses weight, the logbook provides documented proof for the university vet to review before issuing any certificates.</p>
+        </div>
+    </div>
+
+    <!-- 6. Dashboard & Analytics -->
+    <div class="card">
+        <h2>6. Dashboard & Analytics</h2>
+        <p>The <strong>Dashboard</strong> provides a high-level, real-time overview of the entire university's livestock operation. It automatically calculates totals without manual counting.</p>
+        <ul>
+            <li><strong>Total Animals:</strong> Displays the current active herd size.</li>
+            <li><strong>Recent Transactions:</strong> Shows the latest pending or approved movements.</li>
+            <li><strong>Quick Actions:</strong> Provides fast shortcuts to add new animals or record transactions.</li>
+        </ul>
+        <div class="scenario-box">
+            <h4>Scenario: The Morning Briefing</h4>
+            <p><strong>Situation:</strong> The Head of the Agriculture Department needs a quick status update on the farm.</p>
+            <p><strong>Action:</strong> The Admin logs in and looks at the Dashboard. They instantly see that the total active inventory is exactly 142 animals, and they notice there are 3 "Pending" transactions waiting for their approval.</p>
+            <p><strong>Result:</strong> The Admin approves the 3 pending births, and the Dashboard instantly updates the active inventory count to 145.</p>
+        </div>
+    </div>
+
+    <div class="note">
+        <strong>Need Help?</strong> If you encounter a red modal warning (e.g., "Email rate limit exceeded" when creating users), simply wait a few minutes. LIMS uses built-in rate-limiting to prevent spam and protect your university's database.
+    </div>
+
+</div>
+
+</body>
+</html>

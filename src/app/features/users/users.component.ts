@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
@@ -70,14 +71,14 @@ export class DeleteUserDialogComponent {
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule,
-    MatInputModule, MatButtonModule, MatIconModule, MatTableModule, 
+    MatInputModule, MatSelectModule, MatButtonModule, MatIconModule, MatTableModule, 
     MatDividerModule, MatMenuModule, MatDialogModule
   ],
   template: `
     <div class="page-container">
       <div class="welcome-header">
         <h1 class="mat-display-1" style="margin:0; font-weight: 600; color: var(--primary-color);">System Users</h1>
-        <p class="text-muted">Manage staff accounts and permissions.</p>
+        <p class="text-muted">Manage staff and custodian accounts.</p>
       </div>
 
       <div class="content-grid">
@@ -86,7 +87,7 @@ export class DeleteUserDialogComponent {
           <mat-card class="form-card">
             <mat-card-header class="custom-card-header">
               <div mat-card-avatar class="header-icon"><mat-icon>person_add</mat-icon></div>
-              <mat-card-title>Create Staff Account</mat-card-title>
+              <mat-card-title>Create User Account</mat-card-title>
             </mat-card-header>
             <mat-divider></mat-divider>
             
@@ -101,6 +102,14 @@ export class DeleteUserDialogComponent {
               </div>
 
               <form [formGroup]="userForm" (ngSubmit)="createUser()">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Account Role</mat-label>
+                  <mat-select formControlName="role" required>
+                    <mat-option value="staff">Staff (Office Encoder)</mat-option>
+                    <mat-option value="custodian">Custodian (Farm Worker)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Full Name</mat-label>
                   <input matInput type="text" formControlName="fullName" placeholder="John Doe" required>
@@ -238,6 +247,7 @@ export class DeleteUserDialogComponent {
     .role-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
     .role-badge.admin { background: #e8eaf6; color: #3f51b5; border: 1px solid #c5cae9; }
     .role-badge.staff { background: #e0f2f1; color: #00796b; border: 1px solid #b2dfdb; }
+    .role-badge.custodian { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
     .error-banner { background-color: #fde8e8; color: #c81e1e; padding: 12px 16px; border-radius: 6px; display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.4; word-break: break-word; }
     .error-banner mat-icon { font-size: 20px; width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; }
     .success-banner { background-color: #def7ec; color: #03543f; padding: 12px 16px; border-radius: 6px; display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.4; word-break: break-word; }
@@ -268,6 +278,7 @@ export class UsersComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {
     this.userForm = this.fb.group({
+      role: ['staff', Validators.required],
       fullName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
@@ -382,11 +393,11 @@ export class UsersComponent implements OnInit {
       this.cdr.detectChanges(); // Force UI update
       
       try {
-        const { fullName, email, password } = this.userForm.value;
-        await this.userService.createStaffUser(email, password, fullName);
+        const { fullName, email, password, role } = this.userForm.value;
+        await this.userService.createUserAccount(email, password, fullName, role);
         
-        this.successMessage = 'Staff account created! Please remind them to check their inbox to confirm their email.';
-        this.userForm.reset();
+        this.successMessage = 'User account created! Please remind them to check their inbox to confirm their email.';
+        this.userForm.reset({ role: 'staff' });
         Object.keys(this.userForm.controls).forEach(key => {
           this.userForm.get(key)?.setErrors(null);
         });

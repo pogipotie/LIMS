@@ -77,8 +77,12 @@ import { TransactionConfirmDialogComponent } from '../transaction-list/transacti
             </mat-form-field>
 
             <div class="file-upload-container">
-              <label class="file-upload-label">Supporting Document (Optional)</label>
-              <div class="file-upload-box">
+              <label class="file-upload-label">
+                Supporting Document 
+                <span *ngIf="isDocumentRequired" style="color: #c62828; font-weight: bold; font-size: 0.85rem;">*Required for Derecognition</span>
+                <span *ngIf="!isDocumentRequired" class="text-muted">(Optional)</span>
+              </label>
+              <div class="file-upload-box" [ngStyle]="{'border-color': isDocumentRequired && !selectedFile && submitted ? '#c62828' : '#bdc3c7'}">
                 <input type="file" (change)="onFileSelected($event)" accept="image/*,.pdf" #fileInput style="display: none;">
                 <button mat-stroked-button type="button" color="primary" (click)="fileInput.click()">
                   <mat-icon>upload_file</mat-icon> Choose File
@@ -126,6 +130,7 @@ import { TransactionConfirmDialogComponent } from '../transaction-list/transacti
 export class AddTransactionComponent implements OnInit {
   transactionForm: FormGroup;
   loading = false;
+  submitted = false;
   activeLivestock: Livestock[] = [];
   selectedFile: File | null = null;
   
@@ -137,6 +142,11 @@ export class AddTransactionComponent implements OnInit {
     { value: 'transfer_in', label: 'Transfer In' },
     { value: 'transfer_out', label: 'Transfer Out' }
   ];
+
+  get isDocumentRequired(): boolean {
+    const type = this.transactionForm.get('type')?.value;
+    return type === 'death' || type === 'sale' || type === 'transfer_out';
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -171,58 +181,110 @@ export class AddTransactionComponent implements OnInit {
   }
 
   async onSubmit() {
+    this.submitted = true;
+    
     if (this.transactionForm.valid) {
-      this.loading = true;
-      try {
-        const formValue = { ...this.transactionForm.value };
-        
-        // Format Date
-        const dateObj = new Date(formValue.transaction_date);
-        formValue.transaction_date = dateObj.toISOString().split('T')[0];
-        
-        if (!formValue.amount) delete formValue.amount;
-        if (!formValue.notes) delete formValue.notes;
-        
-        // Handle File Upload
-        if (this.selectedFile) {
-          try {
-            const url = await this.transactionService.uploadDocument(this.selectedFile);
-            formValue.document_url = url;
-          } catch (uploadErr) {
-            console.error('File upload failed:', uploadErr);
-            this.dialog.open(TransactionConfirmDialogComponent, {
-              width: '400px',
-              data: {
-                title: 'Upload Warning',
-                message: 'File upload failed. Transaction will be saved without document.',
-                isError: true,
-                showCancel: false,
-                confirmText: 'OK'
-              }
-            });
-          }
-        }
-        
-        // By default, transactions are pending validation from Property Office
-        formValue.validation_status = 'pending';
-
-        await this.transactionService.create(formValue);
-        this.router.navigate(['/transactions']);
-      } catch (error: any) {
-        console.error('Error creating transaction:', error);
+      const formValue = { ...this.transactionForm.value };
+      const type = formValue.type;
+      
+      // Check mandatory document rule
+      if (this.isDocumentRequired && !this.selectedFile) {
         this.dialog.open(TransactionConfirmDialogComponent, {
           width: '400px',
           data: {
-            title: 'Error',
-            message: 'Failed to save transaction. Please try again.',
+            title: 'Missing Document',
+            message: 'A supporting document (e.g. Veterinary Certificate or Notice of Loss) is strictly REQUIRED for this type of transaction per COA rules.',
             isError: true,
             showCancel: false,
-            confirmText: 'Close'
+            confirmText: 'OK'
           }
         });
-      } finally {
-        this.loading = false;
+        return;
       }
+
+      // Check 3-Day Mortality/Loss Rule
+      if (type === 'death' || type === 'sale' || type === 'transfer_out') {
+        const txDate = new Date(formValue.transaction_date);
+        const today = new Date();
+        txDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        
+        const diffTime = Math.abs(today.getTime() - txDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays > 3) {
+          const dialogRef = this.dialog.open(TransactionConfirmDialogComponent, {
+            width: '400px',
+            data: {
+              title: 'Late Reporting Warning',
+              message: `Warning: Mortality or loss must be reported within 3 calendar days per COA rules. You are reporting this ${diffDays} days late. This late submission will be flagged. Do you still wish to proceed?`,
+              isError: true,
+              showCancel: true,
+              confirmText: 'Proceed'
+            }
+          });
+
+          dialogRef.afterClosed().subscribe(res => {
+            if (res) this.executeSubmit(formValue);
+          });
+          return; // Exit here, let the dialog callback handle submission
+        }
+      }
+      
+      // If all rules pass normally
+      this.executeSubmit(formValue);
+    }
+  }
+
+  async executeSubmit(formValue: any) {
+    this.loading = true;
+    try {
+      // Format Date
+      const dateObj = new Date(formValue.transaction_date);
+      formValue.transaction_date = dateObj.toISOString().split('T')[0];
+      
+      if (!formValue.amount) delete formValue.amount;
+      if (!formValue.notes) delete formValue.notes;
+      
+      // Handle File Upload
+      if (this.selectedFile) {
+        try {
+          const url = await this.transactionService.uploadDocument(this.selectedFile);
+          formValue.document_url = url;
+        } catch (uploadErr) {
+          console.error('File upload failed:', uploadErr);
+          this.dialog.open(TransactionConfirmDialogComponent, {
+            width: '400px',
+            data: {
+              title: 'Upload Warning',
+              message: 'File upload failed. Transaction will be saved without document.',
+              isError: true,
+              showCancel: false,
+              confirmText: 'OK'
+            }
+          });
+        }
+      }
+      
+      // By default, transactions are pending validation from Property Office
+      formValue.validation_status = 'pending';
+
+      await this.transactionService.create(formValue);
+      this.router.navigate(['/transactions']);
+    } catch (error: any) {
+      console.error('Error creating transaction:', error);
+      this.dialog.open(TransactionConfirmDialogComponent, {
+        width: '400px',
+        data: {
+          title: 'Error',
+          message: 'Failed to save transaction. Please try again.',
+          isError: true,
+          showCancel: false,
+          confirmText: 'Close'
+        }
+      });
+    } finally {
+      this.loading = false;
     }
   }
 }

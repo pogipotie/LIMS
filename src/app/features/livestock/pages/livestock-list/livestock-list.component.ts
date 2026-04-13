@@ -18,9 +18,11 @@ import { LivestockService } from '../../../../core/services/livestock.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Livestock } from '../../../../shared/models/livestock.model';
 import { CategoryService } from '../../../../core/services/category.service';
-import { CustodianService } from '../../../../core/services/custodian.service';
+import { UserService } from '../../../../core/services/user.service';
 import { Category } from '../../../../shared/models/category.model';
 import { Custodian } from '../../../../shared/models/custodian.model';
+
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 // --- Edit Livestock Dialog Component ---
 @Component({
@@ -63,7 +65,7 @@ import { Custodian } from '../../../../shared/models/custodian.model';
           <mat-label>Assign Custodian</mat-label>
           <mat-select formControlName="custodian_id">
             <mat-option [value]="null">-- None (Unassigned) --</mat-option>
-            <mat-option *ngFor="let cus of data.custodians" [value]="cus.id">{{cus.name}} ({{cus.department}})</mat-option>
+            <mat-option *ngFor="let cus of data.custodians" [value]="cus.user_id">{{cus.full_name}} (Farm Worker)</mat-option>
           </mat-select>
         </mat-form-field>
       </form>
@@ -84,7 +86,7 @@ export class EditLivestockDialogComponent {
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<EditLivestockDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { livestock: Livestock, categories: Category[], custodians: Custodian[] }
+    @Inject(MAT_DIALOG_DATA) public data: { livestock: Livestock, categories: Category[], custodians: any[] }
   ) {
     this.editForm = this.fb.group({
       tag_number: [data.livestock.tag_number || ''],
@@ -173,7 +175,7 @@ export class DeleteLivestockDialogComponent {
   imports: [
     CommonModule, RouterModule, MatTableModule, MatButtonModule, 
     MatIconModule, MatCardModule, MatInputModule, MatFormFieldModule,
-    MatPaginatorModule, MatSortModule, MatTooltipModule, MatChipsModule, MatDialogModule
+    MatPaginatorModule, MatSortModule, MatTooltipModule, MatChipsModule, MatDialogModule, MatSlideToggleModule
   ],
   template: `
     <div class="page-container">
@@ -183,7 +185,7 @@ export class DeleteLivestockDialogComponent {
           <p class="text-muted">Manage, filter, and track all animals currently in your system.</p>
         </div>
         <div class="header-actions">
-          <button mat-flat-button color="primary" routerLink="add" class="add-btn">
+          <button *ngIf="!isCustodian" mat-flat-button color="primary" routerLink="add" class="add-btn">
             <mat-icon>add_circle_outline</mat-icon> Add New Livestock
           </button>
         </div>
@@ -197,6 +199,9 @@ export class DeleteLivestockDialogComponent {
             <input matInput (keyup)="applyFilter($event)" placeholder="Search by Tag No, Name, or Category" #input>
           </mat-form-field>
           <div class="table-controls">
+             <mat-slide-toggle color="primary" [checked]="showInactive" (change)="toggleStatus($event)" style="margin-right: 16px;">
+               Show Derecognized
+             </mat-slide-toggle>
              <button mat-icon-button color="primary" matTooltip="Refresh Data" (click)="loadLivestock()">
                 <mat-icon>refresh</mat-icon>
              </button>
@@ -227,11 +232,17 @@ export class DeleteLivestockDialogComponent {
 
             <!-- Category Column -->
             <ng-container matColumnDef="category">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header> Category </th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header> Category & Status </th>
               <td mat-cell *matCellDef="let element"> 
-                 <mat-chip-set>
+                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                  <mat-chip-set>
                     <mat-chip [disableRipple]="true" class="category-chip">{{element.category}}</mat-chip>
-                 </mat-chip-set>
+                  </mat-chip-set>
+                  <span *ngIf="element.status && element.status !== 'active'" 
+                        class="status-badge" [ngClass]="element.status">
+                    {{element.status | uppercase}}
+                  </span>
+                </div>
               </td>
             </ng-container>
 
@@ -338,7 +349,8 @@ export class DeleteLivestockDialogComponent {
     .name-cell { display: flex; align-items: center; gap: 12px; font-weight: 500; }
     .avatar-icon { background: rgba(var(--primary-color-rgb, 63, 81, 181), 0.1); padding: 8px; border-radius: 50%; color: var(--primary-color); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
     
-    .category-chip { background-color: #f1f2f6 !important; color: #2c3e50 !important; font-weight: 500; border: 1px solid #dfe4ea; }
+    .category-chip { background-color: #e8eaf6; color: #3f51b5; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.5px; }
+    .gender-icon { width: 18px; height: 18px; font-size: 18px; margin-right: 4px; }
     
     .gender-cell { display: flex; align-items: center; gap: 4px; font-weight: 500; }
     .gender-cell.male { color: #1976d2; }
@@ -350,11 +362,13 @@ export class DeleteLivestockDialogComponent {
     .actions-cell { text-align: center; }
 
     /* Status Badges */
-    .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; text-align: center; min-width: 80px; }
+    .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; display: inline-block; text-align: center; min-width: 80px; }
     .status-badge.active { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
     .status-badge.deceased { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
-    .status-badge.sold { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
-    .status-badge.transferred_out { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
+    .status-badge.sold { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
+    .status-badge.transferred { background: #e0f7fa; color: #00695c; border: 1px solid #b2dfdb; }
+
+    .custodian-badge { background-color: #e0f2f1; color: #00796b; padding: 6px 12px; border-radius: 16px; font-size: 0.85rem; font-weight: 500; display: inline-flex; align-items: center; }
 
     /* Empty State */
     .empty-state { text-align: center; padding: 60px 20px; color: #95a5a6; }
@@ -365,7 +379,12 @@ export class DeleteLivestockDialogComponent {
 export class LivestockListComponent implements OnInit {
   displayedColumns: string[] = ['tag_number', 'name', 'category', 'custodian', 'gender', 'age', 'status', 'actions'];
   dataSource = new MatTableDataSource<Livestock>([]);
+  allLivestock: Livestock[] = [];
+  categories: Category[] = [];
+  custodians: any[] = [];
+  showInactive = false;
   isAdmin = false;
+  isCustodian = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -374,31 +393,57 @@ export class LivestockListComponent implements OnInit {
     private livestockService: LivestockService,
     private authService: AuthService,
     private categoryService: CategoryService,
-    private custodianService: CustodianService,
+    private userService: UserService,
     private dialog: MatDialog
   ) {}
 
   async ngOnInit() {
     const role = await this.authService.getUserRole();
     this.isAdmin = role === 'admin';
+    this.isCustodian = role === 'custodian';
     if (!this.isAdmin) {
       this.displayedColumns = this.displayedColumns.filter(c => c !== 'actions');
     }
+    
+    try {
+      const [categories, users] = await Promise.all([
+        this.categoryService.getAll(),
+        this.userService.getAllUsers()
+      ]);
+      this.categories = categories;
+      this.custodians = users.filter(u => u.role === 'custodian' || u.role === 'admin');
+    } catch (e) {
+      console.error('Failed to load filter data', e);
+    }
+
     await this.loadLivestock();
   }
 
   async loadLivestock() {
     try {
-      const data = await this.livestockService.getAll();
-      this.dataSource.data = data;
-      // Setup sorting and pagination after data load
-      setTimeout(() => {
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
-      });
+      this.allLivestock = await this.livestockService.getAll();
+      this.filterActive();
     } catch (error) {
       console.error('Error loading livestock:', error);
     }
+  }
+
+  toggleStatus(event: any) {
+    this.showInactive = event.checked;
+    this.filterActive();
+  }
+
+  filterActive() {
+    if (this.showInactive) {
+      this.dataSource.data = this.allLivestock;
+    } else {
+      this.dataSource.data = this.allLivestock.filter(animal => !animal.status || animal.status === 'active');
+    }
+    
+    setTimeout(() => {
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
+    });
   }
 
   applyFilter(event: Event) {
@@ -414,13 +459,18 @@ export class LivestockListComponent implements OnInit {
     try {
       const [categories, custodians] = await Promise.all([
         this.categoryService.getAll(),
-        this.custodianService.getActive()
+        this.userService.getAllUsers()
       ]);
+      const validCustodians = custodians.filter(u => u.role === 'custodian' || u.role === 'admin');
 
       const dialogRef = this.dialog.open(EditLivestockDialogComponent, {
         width: '95vw',
         maxWidth: '400px',
-        data: { livestock, categories, custodians }
+        data: {
+          livestock,
+          categories: categories,
+          custodians: validCustodians
+        }
       });
 
       dialogRef.afterClosed().subscribe(async (result) => {
@@ -447,22 +497,13 @@ export class LivestockListComponent implements OnInit {
   }
 
   delete(livestock: Livestock) {
-    const dialogRef = this.dialog.open(DeleteLivestockDialogComponent, {
-      width: '95vw',
-      maxWidth: '450px',
-      data: { tag_number: livestock.tag_number, name: livestock.name }
-    });
-
-    dialogRef.afterClosed().subscribe(async (confirmed) => {
-      if (confirmed) {
-        try {
-          await this.livestockService.delete(livestock.id);
-          await this.loadLivestock(); // Refresh data
-        } catch (error) {
-          console.error('Error deleting livestock:', error);
-          alert('Failed to delete the record.');
-        }
-      }
-    });
+    if (confirm(`Are you sure you want to delete ${livestock.tag_number}?`)) {
+      this.livestockService.delete(livestock.id)
+        .then(() => this.loadLivestock())
+        .catch(err => {
+          console.error('Error deleting livestock:', err);
+          alert('Failed to delete livestock.');
+        });
+    }
   }
 }

@@ -1,6 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef, Inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, Inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -48,12 +49,40 @@ import { Livestock } from '../../shared/models/livestock.model';
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Select Livestock</mat-label>
                   <mat-select formControlName="livestock_id" required>
-                    <mat-option *ngFor="let l of activeLivestock" [value]="l.id">
+                    <mat-select-trigger>
+                      {{ getSelectedLivestockLabel() }}
+                    </mat-select-trigger>
+                    
+                    <div class="custom-search-container">
+                      <mat-icon class="search-icon">search</mat-icon>
+                      <input 
+                        class="custom-search-input" 
+                        placeholder="Search by tag, name, or category..." 
+                        [formControl]="livestockSearchCtrl"
+                        (keydown)="$event.stopPropagation()">
+                    </div>
+                    
+                    <mat-option *ngFor="let l of filteredLivestock" [value]="l.id">
                       {{l.tag_number || 'No Tag'}} - {{l.name || 'Unnamed'}} ({{l.category}})
+                    </mat-option>
+                    
+                    <mat-option disabled *ngIf="filteredLivestock.length === 0">
+                      No matching livestock found
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
                 
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Record Type</mat-label>
+                  <mat-select formControlName="record_type" required>
+                    <mat-option value="Routine Check">Routine Check</mat-option>
+                    <mat-option value="Vaccination">Vaccination</mat-option>
+                    <mat-option value="Deworming">Deworming</mat-option>
+                    <mat-option value="Treatment">Medical Treatment</mat-option>
+                    <mat-option value="Other">Other</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Health Status</mat-label>
                   <mat-select formControlName="health_status" required>
@@ -62,6 +91,17 @@ import { Livestock } from '../../shared/models/livestock.model';
                     <mat-option value="sick">Sick</mat-option>
                     <mat-option value="injured">Injured</mat-option>
                   </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Weight (kg)</mat-label>
+                  <input matInput type="number" formControlName="weight_kg" placeholder="e.g. 45.5" min="0" step="0.1">
+                  <mat-icon matSuffix color="primary">scale</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Treatment / Vaccine Administered</mat-label>
+                  <input matInput formControlName="treatment" placeholder="e.g. Parvovirus vaccine, Antibiotics">
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="full-width">
@@ -108,17 +148,31 @@ import { Livestock } from '../../shared/models/livestock.model';
                   </td>
                 </ng-container>
                 
-                <ng-container matColumnDef="status">
-                  <th mat-header-cell *matHeaderCellDef> Status </th>
+                <ng-container matColumnDef="weight">
+                  <th mat-header-cell *matHeaderCellDef> Weight </th>
                   <td mat-cell *matCellDef="let element">
+                     <span *ngIf="element.weight_kg">{{ element.weight_kg }} kg</span>
+                     <span *ngIf="!element.weight_kg" class="text-muted">-</span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef> Type & Status </th>
+                  <td mat-cell *matCellDef="let element">
+                    <div style="font-weight: 500; margin-bottom: 4px;">{{element.record_type || 'Routine Check'}}</div>
                     <span class="status-badge" [ngClass]="element.health_status">{{element.health_status | uppercase | slice:0:15}}</span>
                   </td>
                 </ng-container>
 
                 <ng-container matColumnDef="remarks">
-                  <th mat-header-cell *matHeaderCellDef> Remarks </th>
+                  <th mat-header-cell *matHeaderCellDef> Treatment & Remarks </th>
                   <td mat-cell *matCellDef="let element">
-                     {{ element.remarks ? (element.remarks | slice:0:30) + (element.remarks.length > 30 ? '...' : '') : '-' }}
+                     <div *ngIf="element.treatment" style="color: #2c3e50; font-weight: 600; font-size: 0.85rem; margin-bottom: 2px;">
+                        <mat-icon style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">medical_services</mat-icon> {{element.treatment}}
+                     </div>
+                     <div class="text-muted" style="font-size: 0.85rem;">
+                       {{ element.remarks ? (element.remarks | slice:0:30) + (element.remarks.length > 30 ? '...' : '') : '-' }}
+                     </div>
                   </td>
                 </ng-container>
 
@@ -172,17 +226,25 @@ import { Livestock } from '../../shared/models/livestock.model';
 
     .empty-state { text-align: center; padding: 40px 20px; color: #95a5a6; }
 
+    /* Custom Select Search Styles */
+    .custom-search-container { display: flex; align-items: center; padding: 0 16px; position: sticky; top: 0; background: white; z-index: 2; border-bottom: 1px solid #e0e0e0; margin-bottom: 8px; }
+    .custom-search-container .search-icon { color: #7f8c8d; margin-right: 8px; font-size: 20px; width: 20px; height: 20px; }
+    .custom-search-input { border: none; outline: none; width: 100%; padding: 16px 0; font-size: 1rem; color: #2c3e50; font-family: inherit; }
+
     @media (max-width: 600px) {
       .page-container { padding: 16px; }
       .welcome-header { margin-bottom: 16px; }
     }
   `]
 })
-export class LogbooksComponent implements OnInit {
+export class LogbooksComponent implements OnInit, OnDestroy {
   logbookForm: FormGroup;
   displayedColumns: string[] = ['date', 'livestock', 'status', 'remarks'];
   dataSource = new MatTableDataSource<Logbook>([]);
   activeLivestock: Livestock[] = [];
+  filteredLivestock: Livestock[] = [];
+  livestockSearchCtrl: FormControl = new FormControl<string>('');
+  private _onDestroy = new Subject<void>();
   loading = true;
   isSubmitting = false;
 
@@ -194,7 +256,10 @@ export class LogbooksComponent implements OnInit {
   ) {
     this.logbookForm = this.fb.group({
       livestock_id: ['', Validators.required],
+      record_type: ['Routine Check', Validators.required],
       health_status: ['healthy', Validators.required],
+      weight_kg: [null, [Validators.min(0)]],
+      treatment: [''],
       remarks: ['']
     });
   }
@@ -204,12 +269,59 @@ export class LogbooksComponent implements OnInit {
       this.loadLivestock(),
       this.loadLogbooks()
     ]);
+
+    // Setup the search filter logic
+    this.livestockSearchCtrl.valueChanges
+      .pipe(takeUntil(this._onDestroy))
+      .subscribe(() => {
+        this.filterLivestock();
+      });
+  }
+
+  ngOnDestroy() {
+    this._onDestroy.next();
+    this._onDestroy.complete();
+  }
+
+  private filterLivestock() {
+    if (!this.activeLivestock) {
+      return;
+    }
+    
+    let search = this.livestockSearchCtrl.value;
+    let result = [];
+
+    if (!search) {
+      result = this.activeLivestock.slice();
+    } else {
+      search = search.toLowerCase();
+      result = this.activeLivestock.filter(
+        animal => 
+          (animal.tag_number && animal.tag_number.toLowerCase().includes(search)) ||
+          (animal.name && animal.name.toLowerCase().includes(search)) ||
+          (animal.category && animal.category.toLowerCase().includes(search))
+      );
+    }
+
+    // Limit to 5 results to keep the dropdown clean
+    this.filteredLivestock = result.slice(0, 5);
+  }
+
+  getSelectedLivestockLabel(): string {
+    const selectedId = this.logbookForm.get('livestock_id')?.value;
+    if (!selectedId) return '';
+    
+    const livestock = this.activeLivestock.find(l => l.id === selectedId);
+    if (!livestock) return '';
+    
+    return `${livestock.tag_number || 'No Tag'} - ${livestock.name || 'Unnamed'} (${livestock.category})`;
   }
 
   async loadLivestock() {
     try {
       const data = await this.livestockService.getAll();
       this.activeLivestock = data.filter(l => l.status === 'active');
+      this.filteredLivestock = this.activeLivestock.slice(0, 5); // Limit initial view to 5
     } catch (e) {
       console.error('Error loading livestock', e);
     }

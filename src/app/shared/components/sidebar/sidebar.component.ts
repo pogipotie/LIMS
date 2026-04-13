@@ -22,11 +22,11 @@ import { AuthService } from '../../../core/services/auth.service';
           <mat-icon matListItemIcon>pets</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Livestock</span>
         </a>
-        <a mat-list-item routerLink="/transactions" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Transactions' : ''" matTooltipPosition="right">
+        <a *ngIf="!isCustodian" mat-list-item routerLink="/transactions" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Transactions' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>receipt_long</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Transactions</span>
         </a>
-        <a mat-list-item routerLink="/inventory" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Inventory' : ''" matTooltipPosition="right">
+        <a *ngIf="!isCustodian" mat-list-item routerLink="/inventory" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Inventory' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>inventory_2</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Inventory</span>
         </a>
@@ -38,7 +38,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <mat-icon matListItemIcon>analytics</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Reports</span>
         </a>
-        <a mat-list-item routerLink="/data-management" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Data Management' : ''" matTooltipPosition="right">
+        <a *ngIf="!isCustodian" mat-list-item routerLink="/data-management" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Data Management' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>storage</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Data Management</span>
         </a>
@@ -49,10 +49,6 @@ import { AuthService } from '../../../core/services/auth.service';
         <a *ngIf="isAdmin" mat-list-item routerLink="/users" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'System Users' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>manage_accounts</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">System Users</span>
-        </a>
-        <a *ngIf="isAdmin" mat-list-item routerLink="/custodians" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Manage Custodians' : ''" matTooltipPosition="right">
-          <mat-icon matListItemIcon>assignment_ind</mat-icon>
-          <span matListItemTitle *ngIf="!isCollapsed">Manage Custodians</span>
         </a>
         <a *ngIf="isAdmin" mat-list-item routerLink="/categories" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Manage Categories' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>category</mat-icon>
@@ -183,12 +179,14 @@ export class SidebarComponent implements OnInit {
   @Input() isCollapsed = false;
   @Output() navClick = new EventEmitter<void>();
   isAdmin = false;
+  isCustodian = false;
 
   constructor(private authService: AuthService) {}
 
   async ngOnInit() {
     const role = await this.authService.getUserRole();
     this.isAdmin = role === 'admin';
+    this.isCustodian = role === 'custodian';
   }
 
   onNavClick() {

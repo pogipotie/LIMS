@@ -12,9 +12,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { LivestockService } from '../../../../core/services/livestock.service';
 import { CategoryService } from '../../../../core/services/category.service';
-import { CustodianService } from '../../../../core/services/custodian.service';
+import { UserService } from '../../../../core/services/user.service';
 import { Category } from '../../../../shared/models/category.model';
-import { Custodian } from '../../../../shared/models/custodian.model';
 
 @Component({
   selector: 'app-add-livestock',
@@ -80,7 +79,7 @@ import { Custodian } from '../../../../shared/models/custodian.model';
                 <mat-label>Assign Custodian</mat-label>
                 <mat-select formControlName="custodian_id">
                   <mat-option [value]="null">-- None (Unassigned) --</mat-option>
-                  <mat-option *ngFor="let cus of custodians" [value]="cus.id">{{cus.name}} ({{cus.department}})</mat-option>
+                  <mat-option *ngFor="let cus of custodians" [value]="cus.user_id">{{cus.full_name}} (Farm Worker)</mat-option>
                 </mat-select>
                 <mat-hint>Project In-Charge / End-User</mat-hint>
               </mat-form-field>
@@ -118,13 +117,13 @@ export class AddLivestockComponent implements OnInit {
   livestockForm: FormGroup;
   loading = false;
   categories: Category[] = [];
-  custodians: Custodian[] = [];
+  custodians: any[] = [];
 
   constructor(
     private fb: FormBuilder,
     private livestockService: LivestockService,
     private categoryService: CategoryService,
-    private custodianService: CustodianService,
+    private userService: UserService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {
@@ -140,10 +139,12 @@ export class AddLivestockComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      [this.categories, this.custodians] = await Promise.all([
+      const [categoriesData, usersData] = await Promise.all([
         this.categoryService.getAll(),
-        this.custodianService.getActive()
+        this.userService.getAllUsers()
       ]);
+      this.categories = categoriesData;
+      this.custodians = usersData.filter(u => u.role === 'custodian' || u.role === 'admin'); // allow admin to be custodian too
     } catch (e) {
       console.error('Failed to load form data', e);
     } finally {
