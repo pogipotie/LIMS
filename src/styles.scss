@@ -99,6 +99,15 @@ body.purple-green-theme {
   color: white !important;
 }
 
+/* Ensure icons/buttons inside the primary toolbar inherit the white text color */
+.mat-toolbar.mat-primary .mat-mdc-icon-button,
+.mat-toolbar.mat-primary .mat-icon,
+.mat-toolbar.mat-primary button {
+  color: white !important;
+  --mdc-icon-button-icon-color: white !important;
+  --mat-icon-color: white !important;
+}
+
 .mat-mdc-button.mat-accent, 
 .mat-mdc-raised-button.mat-accent, 
 .mat-mdc-unelevated-button.mat-accent,
