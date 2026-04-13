@@ -82,6 +82,14 @@ import { Livestock } from '../../../../shared/models/livestock.model';
               </td>
             </ng-container>
 
+            <!-- Custodian Column -->
+            <ng-container matColumnDef="custodian">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header> Custodian </th>
+              <td mat-cell *matCellDef="let element" class="date-text"> 
+                {{element.custodian?.name || 'Unassigned'}} 
+              </td>
+            </ng-container>
+
             <!-- Gender Column -->
             <ng-container matColumnDef="gender">
               <th mat-header-cell *matHeaderCellDef mat-sort-header> Gender </th>
@@ -199,15 +207,13 @@ import { Livestock } from '../../../../shared/models/livestock.model';
   `]
 })
 export class LivestockListComponent implements OnInit {
-  displayedColumns: string[] = ['tag_number', 'name', 'category', 'gender', 'age', 'status', 'actions'];
-  dataSource: MatTableDataSource<Livestock>;
+  displayedColumns: string[] = ['tag_number', 'name', 'category', 'custodian', 'gender', 'age', 'status', 'actions'];
+  dataSource = new MatTableDataSource<Livestock>([]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private livestockService: LivestockService) {
-    this.dataSource = new MatTableDataSource<Livestock>([]);
-  }
+  constructor(private livestockService: LivestockService) {}
 
   async ngOnInit() {
     await this.loadLivestock();

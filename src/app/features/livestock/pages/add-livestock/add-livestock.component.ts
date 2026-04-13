@@ -12,7 +12,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { LivestockService } from '../../../../core/services/livestock.service';
 import { CategoryService } from '../../../../core/services/category.service';
+import { CustodianService } from '../../../../core/services/custodian.service';
 import { Category } from '../../../../shared/models/category.model';
+import { Custodian } from '../../../../shared/models/custodian.model';
 
 @Component({
   selector: 'app-add-livestock',
@@ -65,13 +67,24 @@ import { Category } from '../../../../shared/models/category.model';
               </mat-form-field>
             </div>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Birth Date</mat-label>
-              <input matInput [matDatepicker]="picker" formControlName="birth_date">
-              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-              <mat-datepicker #picker></mat-datepicker>
-              <mat-error *ngIf="livestockForm.get('birth_date')?.hasError('required')">Birth date is required</mat-error>
-            </mat-form-field>
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Birth Date</mat-label>
+                <input matInput [matDatepicker]="picker" formControlName="birth_date">
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+                <mat-error *ngIf="livestockForm.get('birth_date')?.hasError('required')">Birth date is required</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Assign Custodian</mat-label>
+                <mat-select formControlName="custodian_id">
+                  <mat-option [value]="null">-- None (Unassigned) --</mat-option>
+                  <mat-option *ngFor="let cus of custodians" [value]="cus.id">{{cus.name}} ({{cus.department}})</mat-option>
+                </mat-select>
+                <mat-hint>Project In-Charge / End-User</mat-hint>
+              </mat-form-field>
+            </div>
 
             <div class="actions">
               <button mat-button type="button" routerLink="..">Cancel</button>
@@ -105,11 +118,13 @@ export class AddLivestockComponent implements OnInit {
   livestockForm: FormGroup;
   loading = false;
   categories: Category[] = [];
+  custodians: Custodian[] = [];
 
   constructor(
     private fb: FormBuilder,
     private livestockService: LivestockService,
     private categoryService: CategoryService,
+    private custodianService: CustodianService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {
@@ -118,15 +133,19 @@ export class AddLivestockComponent implements OnInit {
       name: [''],
       category: ['', Validators.required],
       gender: ['', Validators.required],
-      birth_date: [new Date(), Validators.required]
+      birth_date: [new Date(), Validators.required],
+      custodian_id: [null]
     });
   }
 
   async ngOnInit() {
     try {
-      this.categories = await this.categoryService.getAll();
+      [this.categories, this.custodians] = await Promise.all([
+        this.categoryService.getAll(),
+        this.custodianService.getActive()
+      ]);
     } catch (e) {
-      console.error('Failed to load categories', e);
+      console.error('Failed to load form data', e);
     } finally {
       this.cdr.detectChanges();
     }

@@ -72,6 +72,15 @@ import { TransactionService } from '../../core/services/transaction.service';
         </mat-card>
       </div>
 
+      <!-- Compliance Alerts -->
+      <div *ngIf="pendingMortalities > 0" class="alert-banner">
+        <mat-icon color="warn">warning_amber</mat-icon>
+        <div class="alert-content">
+          <strong>Attention required:</strong> There are {{pendingMortalities}} mortality reports pending validation or missing document attachments that are over 3 days old.
+        </div>
+        <button mat-flat-button color="warn" routerLink="/transactions">Review Now</button>
+      </div>
+
       <div class="main-content-grid">
         <!-- Recent Activity -->
         <mat-card class="activity-card">
@@ -195,6 +204,11 @@ import { TransactionService } from '../../core/services/transaction.service';
     .full-width-btn:last-child { margin-bottom: 0; }
     .full-width-btn mat-icon { margin-right: 12px; }
 
+    /* Alerts */
+    .alert-banner { background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 16px 24px; display: flex; align-items: center; border-radius: 8px; margin-bottom: 24px; gap: 16px; box-shadow: 0 4px 10px rgba(255, 152, 0, 0.1); }
+    .alert-content { flex: 1; color: #e65100; font-size: 1rem; }
+    .alert-content strong { font-weight: 600; }
+
     @media (max-width: 600px) {
       .dashboard-container { padding: 16px; }
       .welcome-header { flex-direction: column; align-items: flex-start; gap: 16px; }
@@ -212,6 +226,7 @@ export class DashboardComponent implements OnInit {
   totalDeceased = 0;
   monthlyAdditions = 0;
   recentTransactions: any[] = [];
+  pendingMortalities = 0;
 
   constructor(
     private livestockService: LivestockService,
@@ -232,6 +247,16 @@ export class DashboardComponent implements OnInit {
 
       this.totalTransactions = transactions.length;
       
+      // Check for pending mortalities > 3 days old
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      
+      this.pendingMortalities = transactions.filter(t => 
+        t.type === 'death' && 
+        (t.validation_status === 'pending' || !t.document_url) &&
+        new Date(t.transaction_date) <= threeDaysAgo
+      ).length;
+
       // Calculate additions this month (births, purchases, transfer_in)
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();

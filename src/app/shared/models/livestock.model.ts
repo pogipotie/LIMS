@@ -6,6 +6,8 @@ export interface Livestock {
   gender: 'male' | 'female';
   birth_date: string | Date;
   status: 'active' | 'deceased' | 'sold' | 'transferred_out';
+  custodian_id?: string;
+  custodian?: any; // Joined data
   created_at?: Date;
   updated_at?: Date;
 }

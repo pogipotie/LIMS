@@ -30,6 +30,10 @@ import { AuthService } from '../../../core/services/auth.service';
           <mat-icon matListItemIcon>inventory_2</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Inventory</span>
         </a>
+        <a mat-list-item routerLink="/logbooks" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Logbooks' : ''" matTooltipPosition="right">
+          <mat-icon matListItemIcon>book</mat-icon>
+          <span matListItemTitle *ngIf="!isCollapsed">Health Logbook</span>
+        </a>
         <a mat-list-item routerLink="/reports" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Reports' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>analytics</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Reports</span>
@@ -42,6 +46,10 @@ import { AuthService } from '../../../core/services/auth.service';
         <mat-divider></mat-divider>
         <div class="sidebar-subheader" *ngIf="!isCollapsed">System</div>
         
+        <a mat-list-item routerLink="/custodians" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Manage Custodians' : ''" matTooltipPosition="right">
+          <mat-icon matListItemIcon>assignment_ind</mat-icon>
+          <span matListItemTitle *ngIf="!isCollapsed">Manage Custodians</span>
+        </a>
         <a mat-list-item routerLink="/categories" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Manage Categories' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>category</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Manage Categories</span>

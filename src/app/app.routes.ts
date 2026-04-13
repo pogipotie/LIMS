@@ -11,6 +11,8 @@ export const routes: Routes = [
   { path: 'data-management', loadChildren: () => import('./features/data-management/data-management-routing.module').then(m => m.DataManagementRoutingModule), canActivate: [AuthGuard] },
   { path: 'categories', loadChildren: () => import('./features/categories/categories-routing.module').then(m => m.CategoriesRoutingModule), canActivate: [AuthGuard] },
   { path: 'settings', loadChildren: () => import('./features/settings/settings-routing.module').then(m => m.SettingsRoutingModule), canActivate: [AuthGuard] },
+  { path: 'custodians', loadChildren: () => import('./features/custodians/custodians-routing.module').then(m => m.CustodiansRoutingModule), canActivate: [AuthGuard] },
+  { path: 'logbooks', loadChildren: () => import('./features/logbooks/logbooks-routing.module').then(m => m.LogbooksRoutingModule), canActivate: [AuthGuard] },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: 'dashboard' }
 ];

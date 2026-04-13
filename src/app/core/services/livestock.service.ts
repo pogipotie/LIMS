@@ -9,7 +9,17 @@ export class LivestockService {
   constructor(private supabase: SupabaseService) {}
 
   async getAll(): Promise<Livestock[]> {
-    const { data, error } = await this.supabase.client.from(this.table).select('*');
+    const { data, error } = await this.supabase.client
+      .from(this.table)
+      .select(`
+        *,
+        custodian:custodian_id (
+          id,
+          name,
+          department
+        )
+      `)
+      .order('created_at', { ascending: false });
     if (error) throw error;
     return data || [];
   }
