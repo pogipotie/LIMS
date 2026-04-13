@@ -46,6 +46,10 @@ import { AuthService } from '../../../core/services/auth.service';
         <mat-divider *ngIf="isAdmin"></mat-divider>
         <div class="sidebar-subheader" *ngIf="!isCollapsed && isAdmin">System</div>
         
+        <a *ngIf="isAdmin" mat-list-item routerLink="/users" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'System Users' : ''" matTooltipPosition="right">
+          <mat-icon matListItemIcon>manage_accounts</mat-icon>
+          <span matListItemTitle *ngIf="!isCollapsed">System Users</span>
+        </a>
         <a *ngIf="isAdmin" mat-list-item routerLink="/custodians" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Manage Custodians' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>assignment_ind</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Manage Custodians</span>
