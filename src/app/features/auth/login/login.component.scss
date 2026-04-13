@@ -127,3 +127,26 @@ mat-icon[matPrefix] {
   padding-top: 20px;
 }
 
+.user-guide-link {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+  transition: color 0.2s;
+}
+
+.user-guide-link:hover {
+  color: var(--accent-color);
+}
+
+.user-guide-link mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+

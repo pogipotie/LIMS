@@ -252,36 +252,46 @@
     <!-- 5. Health Logbooks -->
     <div class="card">
         <h2>5. Regular Monitoring (Health Logbooks)</h2>
-        <p>The <strong>Health Logbook</strong> module is used by Custodians to log the daily/weekly condition of the animals.</p>
+        <p>The <strong>Health Logbook</strong> module is used by Custodians and Staff to log the daily/weekly condition of the animals.</p>
         <ul>
-            <li>Select an animal from the list.</li>
-            <li>Log its current <strong>Weight (kg)</strong>, feed consumption, vaccinations, or general observations.</li>
-            <li>This maintains a historical timeline of the animal's growth and health leading up to a potential sale or harvest.</li>
+            <li><strong>Smart Search:</strong> When selecting an animal, use the built-in search bar to quickly find an animal by its Tag Number (e.g., <code>COW-042</code>) without scrolling through hundreds of rows.</li>
+            <li><strong>Record Type:</strong> Specify exactly what was done (Routine Check, Vaccination, Deworming, or Medical Treatment).</li>
+            <li><strong>Weight (kg):</strong> Accurately track weight gain over time.</li>
+            <li><strong>Treatment:</strong> Log specific medicines administered (e.g., "Amoxicillin 2ml").</li>
         </ul>
 
         <div class="scenario-box">
-            <h4>Scenario: Weekly Weight Tracking</h4>
-            <p><strong>Situation:</strong> The farm needs to ensure the swine are gaining weight properly before sale.</p>
-            <p><strong>Action:</strong> The staff member weighs Pig `SW-012` on Monday and logs `45kg` in the Health Logbook. The following Monday, they weigh it again and log `48kg`.</p>
-            <p><strong>Result:</strong> The system builds a chronological history. If the pig gets sick and loses weight, the logbook provides documented proof for the university vet to review before issuing any certificates.</p>
+            <h4>Scenario: Logging a Deworming Session</h4>
+            <p><strong>Situation:</strong> The farm needs to ensure the swine are properly dewormed before sale.</p>
+            <p><strong>Action:</strong> The Custodian logs in, goes to Health Logbook, and searches for Pig `SW-012`. They select <strong>Record Type: Deworming</strong>, log the weight as `45kg`, and enter `Ivermectin` under the Treatment field.</p>
+            <p><strong>Result:</strong> The system builds a chronological, highly-detailed medical history. If the pig gets sick later, the logbook provides documented proof of previous treatments for the university vet to review.</p>
         </div>
     </div>
 
     <!-- 6. Dashboard & Analytics -->
     <div class="card">
-        <h2>6. Dashboard & Analytics</h2>
-        <p>The <strong>Dashboard</strong> provides a high-level, real-time overview of the entire university's livestock operation. It automatically calculates totals without manual counting.</p>
+        <h2>6. Dashboards & Analytics</h2>
+        <p>The <strong>Dashboard</strong> provides a high-level, real-time overview of the operation. It automatically changes based on who is logged in:</p>
         <ul>
-            <li><strong>Total Animals:</strong> Displays the current active herd size.</li>
-            <li><strong>Recent Transactions:</strong> Shows the latest pending or approved movements.</li>
-            <li><strong>Quick Actions:</strong> Provides fast shortcuts to add new animals or record transactions.</li>
+            <li><strong>Admin & Staff Dashboard:</strong> Displays the global active herd size, monthly additions, deceased totals, and global recent activity. It also flashes <span style="color:#e67e22; font-weight:bold;">Orange Compliance Alerts</span> if there are pending mortalities that violate the 3-day COA rule.</li>
+            <li><strong>Custodian Dashboard:</strong> Provides a highly-focused view. Displays only the count of their <em>assigned</em> animals, the number of recent <strong>Health Alerts</strong> (sick/injured animals), and recent logs they've recorded.</li>
         </ul>
         <div class="scenario-box">
             <h4>Scenario: The Morning Briefing</h4>
             <p><strong>Situation:</strong> The Head of the Agriculture Department needs a quick status update on the farm.</p>
-            <p><strong>Action:</strong> The Admin logs in and looks at the Dashboard. They instantly see that the total active inventory is exactly 142 animals, and they notice there are 3 "Pending" transactions waiting for their approval.</p>
-            <p><strong>Result:</strong> The Admin approves the 3 pending births, and the Dashboard instantly updates the active inventory count to 145.</p>
+            <p><strong>Action:</strong> The Admin logs in and looks at the Dashboard. They instantly see that the total active inventory is exactly 142 animals, and they notice there is an orange alert for 3 "Pending Mortalities" waiting for validation.</p>
+            <p><strong>Result:</strong> The Admin clicks "Review Now", reviews the attached Veterinary Certificates, and approves them. The Dashboard instantly updates the active inventory count down to 139.</p>
         </div>
+    </div>
+
+    <!-- 7. Dynamic Reports -->
+    <div class="card">
+        <h2>7. Dynamic Reporting (PDF Exports)</h2>
+        <p>The <strong>Reports</strong> page allows you to generate official, printable PDFs. Like the dashboard, this adapts to the user's role:</p>
+        <ul>
+            <li><strong>Monthly Financial Report (Admin/Staff):</strong> Select a specific Year and Month. Generates a breakdown of all Additions (Births, Purchases, Transfers In) and Deductions (Deaths, Sales, Transfers Out) across the whole university, including exact financial amounts.</li>
+            <li><strong>Health & Activity Report (Custodian):</strong> Select "Past 7 Days" or "Past 30 Days". Generates a beautiful PDF table listing every single medical treatment, vaccination, weight check, and deworming session the custodian performed on their assigned herd. Perfect for submitting weekly operational reports to managers!</li>
+        </ul>
     </div>
 
     <div class="note">
