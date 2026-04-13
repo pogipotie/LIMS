@@ -18,6 +18,7 @@ import { CommonModule } from '@angular/common';
 export class LoginComponent {
   loginForm: FormGroup;
   error: string = '';
+  hidePassword = true;
 
   constructor(
     private fb: FormBuilder,
