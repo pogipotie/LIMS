@@ -411,7 +411,7 @@ export class LivestockListComponent implements OnInit {
         this.userService.getAllUsers()
       ]);
       this.categories = categories;
-      this.custodians = users.filter(u => u.role === 'custodian' || u.role === 'admin');
+      this.custodians = users.filter(u => u.role === 'custodian');
     } catch (e) {
       console.error('Failed to load filter data', e);
     }
@@ -461,7 +461,7 @@ export class LivestockListComponent implements OnInit {
         this.categoryService.getAll(),
         this.userService.getAllUsers()
       ]);
-      const validCustodians = custodians.filter(u => u.role === 'custodian' || u.role === 'admin');
+      const validCustodians = custodians.filter(u => u.role === 'custodian');
 
       const dialogRef = this.dialog.open(EditLivestockDialogComponent, {
         width: '95vw',

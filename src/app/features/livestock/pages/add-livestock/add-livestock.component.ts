@@ -144,7 +144,7 @@ export class AddLivestockComponent implements OnInit {
         this.userService.getAllUsers()
       ]);
       this.categories = categoriesData;
-      this.custodians = usersData.filter(u => u.role === 'custodian' || u.role === 'admin'); // allow admin to be custodian too
+      this.custodians = usersData.filter(u => u.role === 'custodian'); // only allow actual custodians
     } catch (e) {
       console.error('Failed to load form data', e);
     } finally {
