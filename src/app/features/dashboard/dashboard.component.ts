@@ -7,6 +7,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { LivestockService } from '../../core/services/livestock.service';
 import { TransactionService } from '../../core/services/transaction.service';
+import { LogbookService } from '../../core/services/logbook.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,9 +19,9 @@ import { TransactionService } from '../../core/services/transaction.service';
       <div class="welcome-header">
         <div>
           <h1 class="mat-display-1" style="margin:0; font-weight: 600; color: #2c3e50;">Dashboard Overview</h1>
-          <p class="text-muted">Here is what's happening with your livestock today.</p>
+          <p class="text-muted">{{ isCustodian ? 'Here is what\\'s happening with your assigned herd.' : 'Here is what\\'s happening with your livestock today.' }}</p>
         </div>
-        <div class="header-actions">
+        <div class="header-actions" *ngIf="!isCustodian">
           <button mat-flat-button color="primary" routerLink="/transactions/add" class="add-btn">
             <mat-icon>add</mat-icon> Record Transaction
           </button>
@@ -33,47 +35,75 @@ import { TransactionService } from '../../core/services/transaction.service';
             <mat-icon color="primary">pets</mat-icon>
           </div>
           <div class="stat-content">
-            <p class="stat-title">Active Livestock</p>
+            <p class="stat-title">{{ isCustodian ? 'Assigned Livestock' : 'Active Livestock' }}</p>
             <h2 class="stat-value">{{ totalActiveLivestock }}</h2>
           </div>
         </mat-card>
 
-        <!-- Total Transactions -->
-        <mat-card class="stat-card">
-          <div class="stat-icon-wrapper bg-accent-light">
-            <mat-icon color="accent">receipt_long</mat-icon>
-          </div>
-          <div class="stat-content">
-            <p class="stat-title">Total Transactions</p>
-            <h2 class="stat-value">{{ totalTransactions }}</h2>
-          </div>
-        </mat-card>
+        <!-- Admin/Staff Stats -->
+        <ng-container *ngIf="!isCustodian">
+          <!-- Total Transactions -->
+          <mat-card class="stat-card">
+            <div class="stat-icon-wrapper bg-accent-light">
+              <mat-icon color="accent">receipt_long</mat-icon>
+            </div>
+            <div class="stat-content">
+              <p class="stat-title">Total Transactions</p>
+              <h2 class="stat-value">{{ totalTransactions }}</h2>
+            </div>
+          </mat-card>
 
-        <!-- Total Deceased -->
-        <mat-card class="stat-card">
-          <div class="stat-icon-wrapper bg-warn-light">
-            <mat-icon color="warn">warning</mat-icon>
-          </div>
-          <div class="stat-content">
-            <p class="stat-title">Total Deceased</p>
-            <h2 class="stat-value">{{ totalDeceased }}</h2>
-          </div>
-        </mat-card>
-        
-        <!-- Monthly Additions (New Card) -->
-        <mat-card class="stat-card">
-          <div class="stat-icon-wrapper bg-success-light">
-            <mat-icon class="text-success">trending_up</mat-icon>
-          </div>
-          <div class="stat-content">
-            <p class="stat-title">Additions This Month</p>
-            <h2 class="stat-value">{{ monthlyAdditions }}</h2>
-          </div>
-        </mat-card>
+          <!-- Total Deceased -->
+          <mat-card class="stat-card">
+            <div class="stat-icon-wrapper bg-warn-light">
+              <mat-icon color="warn">warning</mat-icon>
+            </div>
+            <div class="stat-content">
+              <p class="stat-title">Total Deceased</p>
+              <h2 class="stat-value">{{ totalDeceased }}</h2>
+            </div>
+          </mat-card>
+          
+          <!-- Monthly Additions -->
+          <mat-card class="stat-card">
+            <div class="stat-icon-wrapper bg-success-light">
+              <mat-icon class="text-success">trending_up</mat-icon>
+            </div>
+            <div class="stat-content">
+              <p class="stat-title">Additions This Month</p>
+              <h2 class="stat-value">{{ monthlyAdditions }}</h2>
+            </div>
+          </mat-card>
+        </ng-container>
+
+        <!-- Custodian Stats -->
+        <ng-container *ngIf="isCustodian">
+          <!-- Sick/Injured Animals -->
+          <mat-card class="stat-card">
+            <div class="stat-icon-wrapper bg-warn-light">
+              <mat-icon color="warn">healing</mat-icon>
+            </div>
+            <div class="stat-content">
+              <p class="stat-title">Health Alerts</p>
+              <h2 class="stat-value" [style.color]="sickLivestock > 0 ? '#c62828' : ''">{{ sickLivestock }}</h2>
+            </div>
+          </mat-card>
+
+          <!-- Logbooks This Week -->
+          <mat-card class="stat-card">
+            <div class="stat-icon-wrapper bg-success-light">
+              <mat-icon class="text-success">book</mat-icon>
+            </div>
+            <div class="stat-content">
+              <p class="stat-title">Logs This Week</p>
+              <h2 class="stat-value">{{ weeklyLogs }}</h2>
+            </div>
+          </mat-card>
+        </ng-container>
       </div>
 
-      <!-- Compliance Alerts -->
-      <div *ngIf="pendingMortalities > 0" class="alert-banner">
+      <!-- Compliance Alerts (Admin Only) -->
+      <div *ngIf="!isCustodian && pendingMortalities > 0" class="alert-banner">
         <mat-icon color="warn">warning_amber</mat-icon>
         <div class="alert-content">
           <strong>Attention required:</strong> There are {{pendingMortalities}} mortality reports pending validation or missing document attachments that are over 3 days old.
@@ -86,38 +116,41 @@ import { TransactionService } from '../../core/services/transaction.service';
         <mat-card class="activity-card">
           <mat-card-header class="custom-card-header">
             <div mat-card-avatar class="header-icon"><mat-icon>history</mat-icon></div>
-            <mat-card-title>Recent Activity</mat-card-title>
-            <mat-card-subtitle>Latest transactions across your farm</mat-card-subtitle>
+            <mat-card-title>{{ isCustodian ? 'Recent Health Logs' : 'Recent Activity' }}</mat-card-title>
+            <mat-card-subtitle>{{ isCustodian ? 'Latest medical entries for your herd' : 'Latest transactions across your farm' }}</mat-card-subtitle>
           </mat-card-header>
           <mat-divider></mat-divider>
           <mat-card-content>
-            <div *ngIf="recentTransactions.length === 0" class="empty-state">
+            <div *ngIf="recentActivity.length === 0" class="empty-state">
               <mat-icon>history_toggle_off</mat-icon>
               <p>No recent activity to show.</p>
             </div>
             
-            <div class="timeline" *ngIf="recentTransactions.length > 0">
-              <div class="timeline-item" *ngFor="let t of recentTransactions">
-                <div class="timeline-icon" [ngClass]="t.type">
-                  <mat-icon>{{ getTransactionIcon(t.type) }}</mat-icon>
+            <div class="timeline" *ngIf="recentActivity.length > 0">
+              <div class="timeline-item" *ngFor="let t of recentActivity">
+                <div class="timeline-icon" [ngClass]="isCustodian ? t.health_status : t.type">
+                  <mat-icon>{{ isCustodian ? getLogbookIcon(t.record_type) : getTransactionIcon(t.type) }}</mat-icon>
                 </div>
                 <div class="timeline-content">
                   <div class="timeline-header">
-                    <strong class="timeline-title">{{ (t.type || '').replace('_', ' ') | uppercase }}</strong>
-                    <span class="timeline-date">{{ t.transaction_date | date:'MMM d, y, h:mm a':'+0800' }}</span>
+                    <strong class="timeline-title">{{ isCustodian ? (t.record_type || 'Routine Check') : (t.type || '').replace('_', ' ') | uppercase }}</strong>
+                    <span class="timeline-date">{{ (isCustodian ? t.log_date : t.transaction_date) | date:'MMM d, y, h:mm a':'+0800' }}</span>
                   </div>
                   <p class="timeline-body">
                     Livestock: <strong>{{ t.livestock?.tag_number || 'N/A' }}</strong> ({{ t.livestock?.category }})
-                    <span *ngIf="t.amount"> &bull; <span class="amount-text">{{ t.amount | currency }}</span></span>
+                    <span *ngIf="!isCustodian && t.amount"> &bull; <span class="amount-text">{{ t.amount | currency }}</span></span>
+                    <span *ngIf="isCustodian && t.weight_kg"> &bull; <span class="amount-text">{{ t.weight_kg }} kg</span></span>
                   </p>
-                  <p class="timeline-notes" *ngIf="t.notes"><mat-icon inline>notes</mat-icon> {{ t.notes }}</p>
+                  <p class="timeline-notes" *ngIf="isCustodian && t.treatment"><mat-icon inline style="font-size: 14px; width: 14px; height: 14px;">medical_services</mat-icon> <strong>Treatment:</strong> {{ t.treatment }}</p>
+                  <p class="timeline-notes" *ngIf="!isCustodian && t.notes"><mat-icon inline>notes</mat-icon> {{ t.notes }}</p>
+                  <p class="timeline-notes" *ngIf="isCustodian && t.remarks"><mat-icon inline>notes</mat-icon> {{ t.remarks }}</p>
                 </div>
               </div>
             </div>
           </mat-card-content>
           <mat-divider></mat-divider>
           <mat-card-actions align="end" class="card-actions">
-            <button mat-button color="primary" routerLink="/transactions">View All Transactions</button>
+            <button mat-button color="primary" [routerLink]="isCustodian ? '/logbooks' : '/transactions'">View All {{ isCustodian ? 'Logs' : 'Transactions' }}</button>
           </mat-card-actions>
         </mat-card>
 
@@ -130,14 +163,17 @@ import { TransactionService } from '../../core/services/transaction.service';
             </mat-card-header>
             <mat-divider></mat-divider>
             <mat-card-content class="quick-links-content">
-              <button mat-stroked-button color="primary" class="full-width-btn" routerLink="/livestock/add">
+              <button *ngIf="!isCustodian" mat-stroked-button color="primary" class="full-width-btn" routerLink="/livestock/add">
                 <mat-icon>add_circle_outline</mat-icon> Add New Livestock
               </button>
-              <button mat-stroked-button color="accent" class="full-width-btn" routerLink="/inventory">
+              <button *ngIf="isCustodian" mat-stroked-button color="primary" class="full-width-btn" routerLink="/logbooks">
+                <mat-icon>post_add</mat-icon> Create Health Log
+              </button>
+              <button *ngIf="!isCustodian" mat-stroked-button color="accent" class="full-width-btn" routerLink="/inventory">
                 <mat-icon>inventory_2</mat-icon> View Inventory Summary
               </button>
               <button mat-stroked-button class="full-width-btn text-success" routerLink="/reports">
-                <mat-icon>picture_as_pdf</mat-icon> Generate Monthly Report
+                <mat-icon>picture_as_pdf</mat-icon> Generate {{ isCustodian ? 'Weekly' : 'Monthly' }} Report
               </button>
             </mat-card-content>
           </mat-card>
@@ -185,6 +221,9 @@ import { TransactionService } from '../../core/services/transaction.service';
     .timeline-icon mat-icon { font-size: 20px; width: 20px; height: 20px; }
     .timeline-icon.birth, .timeline-icon.purchase, .timeline-icon.transfer_in { background-color: #4caf50; color: white; }
     .timeline-icon.death, .timeline-icon.sale, .timeline-icon.transfer_out { background-color: #f44336; color: white; }
+    .timeline-icon.healthy { background-color: #4caf50; color: white; }
+    .timeline-icon.sick, .timeline-icon.injured { background-color: #f44336; color: white; }
+    .timeline-icon.under_observation { background-color: #ff9800; color: white; }
     
     .timeline-content { flex: 1; background: white; border: 1px solid #f0f0f0; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: background-color 0.2s; }
     .timeline-content:hover { background-color: #fafafa; }
@@ -225,51 +264,87 @@ export class DashboardComponent implements OnInit {
   totalTransactions = 0;
   totalDeceased = 0;
   monthlyAdditions = 0;
-  recentTransactions: any[] = [];
+  recentActivity: any[] = [];
   pendingMortalities = 0;
+  
+  isCustodian = false;
+  sickLivestock = 0;
+  weeklyLogs = 0;
 
   constructor(
     private livestockService: LivestockService,
     private transactionService: TransactionService,
+    private logbookService: LogbookService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef
   ) {}
 
   async ngOnInit() {
     try {
-      // Fetch data concurrently for faster dashboard loading
-      const [livestock, transactions] = await Promise.all([
-        this.livestockService.getAll(),
-        this.transactionService.getAll()
-      ]);
-      
-      this.totalActiveLivestock = livestock.filter(l => l.status === 'active').length;
-      this.totalDeceased = livestock.filter(l => l.status === 'deceased').length;
+      const role = await this.authService.getUserRole();
+      this.isCustodian = role === 'custodian';
 
-      this.totalTransactions = transactions.length;
-      
-      // Check for pending mortalities > 3 days old
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-      
-      this.pendingMortalities = transactions.filter(t => 
-        t.type === 'death' && 
-        (t.validation_status === 'pending' || !t.document_url) &&
-        new Date(t.transaction_date) <= threeDaysAgo
-      ).length;
+      if (this.isCustodian) {
+        const [livestock, logbooks] = await Promise.all([
+          this.livestockService.getAll(),
+          this.logbookService.getAll()
+        ]);
+        
+        this.totalActiveLivestock = livestock.filter(l => l.status === 'active').length;
+        
+        // Filter sick livestock
+        const activeLivestockIds = livestock.filter(l => l.status === 'active').map(l => l.id);
+        const recentLogs = logbooks.filter(l => activeLivestockIds.includes(l.livestock_id));
+        
+        // Find animals currently marked as sick or injured
+        const sickIds = new Set(recentLogs.filter(l => l.health_status === 'sick' || l.health_status === 'injured').map(l => l.livestock_id));
+        this.sickLivestock = sickIds.size;
+        
+        // Weekly logs
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        this.weeklyLogs = logbooks.filter(l => new Date(l.log_date) >= oneWeekAgo).length;
+        
+        this.recentActivity = logbooks
+          .sort((a, b) => new Date(b.log_date).getTime() - new Date(a.log_date).getTime())
+          .slice(0, 5);
 
-      // Calculate additions this month (births, purchases, transfer_in)
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      this.monthlyAdditions = transactions.filter(t => {
-        const tDate = new Date(t.transaction_date);
-        const isAddition = ['birth', 'purchase', 'transfer_in'].includes(t.type);
-        return isAddition && tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
-      }).length;
-      
-      // Sort by date descending and grab the top 5
-      this.recentTransactions = transactions
-        .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())
-        .slice(0, 5);
+      } else {
+        // Fetch data concurrently for faster dashboard loading
+        const [livestock, transactions] = await Promise.all([
+          this.livestockService.getAll(),
+          this.transactionService.getAll()
+        ]);
+        
+        this.totalActiveLivestock = livestock.filter(l => l.status === 'active').length;
+        this.totalDeceased = livestock.filter(l => l.status === 'deceased').length;
+
+        this.totalTransactions = transactions.length;
+        
+        // Check for pending mortalities > 3 days old
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+        
+        this.pendingMortalities = transactions.filter(t => 
+          t.type === 'death' && 
+          (t.validation_status === 'pending' || !t.document_url) &&
+          new Date(t.transaction_date) <= threeDaysAgo
+        ).length;
+
+        // Calculate additions this month (births, purchases, transfer_in)
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        this.monthlyAdditions = transactions.filter(t => {
+          const tDate = new Date(t.transaction_date);
+          const isAddition = ['birth', 'purchase', 'transfer_in'].includes(t.type);
+          return isAddition && tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+        }).length;
+        
+        // Sort by date descending and grab the top 5
+        this.recentActivity = transactions
+          .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())
+          .slice(0, 5);
+      }
 
       this.cdr.detectChanges();
     } catch (e) {
@@ -286,6 +361,15 @@ export class DashboardComponent implements OnInit {
       case 'transfer_in': return 'arrow_downward';
       case 'transfer_out': return 'arrow_upward';
       default: return 'receipt_long';
+    }
+  }
+
+  getLogbookIcon(type: string): string {
+    switch(type) {
+      case 'Vaccination': return 'vaccines';
+      case 'Treatment': return 'medical_services';
+      case 'Deworming': return 'medication';
+      default: return 'fact_check';
     }
   }
 }
