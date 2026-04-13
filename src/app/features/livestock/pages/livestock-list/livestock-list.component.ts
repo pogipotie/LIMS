@@ -11,9 +11,161 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialogModule, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatSelectModule } from '@angular/material/select';
 import { LivestockService } from '../../../../core/services/livestock.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Livestock } from '../../../../shared/models/livestock.model';
+import { CategoryService } from '../../../../core/services/category.service';
+import { CustodianService } from '../../../../core/services/custodian.service';
+import { Category } from '../../../../shared/models/category.model';
+import { Custodian } from '../../../../shared/models/custodian.model';
+
+// --- Edit Livestock Dialog Component ---
+@Component({
+  selector: 'app-edit-livestock-dialog',
+  standalone: true,
+  imports: [
+    CommonModule, ReactiveFormsModule, MatFormFieldModule, 
+    MatInputModule, MatButtonModule, MatDialogModule, MatSelectModule
+  ],
+  template: `
+    <h2 mat-dialog-title>Edit Livestock</h2>
+    <mat-dialog-content>
+      <form [formGroup]="editForm" class="dialog-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Tag Number</mat-label>
+          <input matInput formControlName="tag_number">
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="category">
+            <mat-option *ngFor="let cat of data.categories" [value]="cat.name">{{cat.name}}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Gender</mat-label>
+          <mat-select formControlName="gender">
+            <mat-option value="male">Male</mat-option>
+            <mat-option value="female">Female</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Assign Custodian</mat-label>
+          <mat-select formControlName="custodian_id">
+            <mat-option [value]="null">-- None (Unassigned) --</mat-option>
+            <mat-option *ngFor="let cus of data.custodians" [value]="cus.id">{{cus.name}} ({{cus.department}})</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button mat-dialog-close>Cancel</button>
+      <button mat-flat-button color="primary" [disabled]="editForm.invalid" (click)="save()">Save Changes</button>
+    </mat-dialog-actions>
+  `,
+  styles: [`
+    .dialog-form { display: flex; flex-direction: column; gap: 16px; width: 100%; padding-top: 16px; box-sizing: border-box; }
+    .full-width { width: 100%; }
+  `]
+})
+export class EditLivestockDialogComponent {
+  editForm: FormGroup;
+
+  constructor(
+    private fb: FormBuilder,
+    public dialogRef: MatDialogRef<EditLivestockDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { livestock: Livestock, categories: Category[], custodians: Custodian[] }
+  ) {
+    this.editForm = this.fb.group({
+      tag_number: [data.livestock.tag_number || ''],
+      name: [data.livestock.name || ''],
+      category: [data.livestock.category, Validators.required],
+      gender: [data.livestock.gender, Validators.required],
+      custodian_id: [data.livestock.custodian_id || null]
+    });
+  }
+
+  save() {
+    if (this.editForm.valid) {
+      this.dialogRef.close({
+        id: this.data.livestock.id,
+        ...this.editForm.value
+      });
+    }
+  }
+}
+
+// --- Delete Confirmation Dialog Component ---
+@Component({
+  selector: 'app-delete-livestock-dialog',
+  standalone: true,
+  imports: [CommonModule, MatButtonModule, MatDialogModule, MatIconModule],
+  template: `
+    <div class="delete-dialog-container">
+      <div class="dialog-header bg-warn-light">
+        <div class="icon-circle warn-glow">
+          <mat-icon color="warn">warning_amber</mat-icon>
+        </div>
+        <h2 mat-dialog-title class="dialog-title">Delete Livestock?</h2>
+      </div>
+      
+      <mat-dialog-content class="dialog-content">
+        <p class="primary-text">
+          You are about to permanently delete <strong>{{ data.tag_number ? data.tag_number : 'this animal' }} {{ data.name ? '(' + data.name + ')' : '' }}</strong>.
+        </p>
+        <div class="warning-box">
+          <mat-icon class="info-icon">info</mat-icon>
+          <p class="secondary-text">
+            All related transactions and logbook entries will also be deleted. This cannot be undone.
+          </p>
+        </div>
+      </mat-dialog-content>
+      <mat-dialog-actions class="dialog-actions">
+        <button mat-stroked-button mat-dialog-close class="action-btn">Cancel</button>
+        <button mat-flat-button color="warn" [mat-dialog-close]="true" class="action-btn delete-btn">
+          <mat-icon>delete_forever</mat-icon> Yes, Delete
+        </button>
+      </mat-dialog-actions>
+    </div>
+  `,
+  styles: [`
+    .delete-dialog-container { overflow: hidden; }
+    .dialog-header { display: flex; flex-direction: column; align-items: center; padding: 32px 24px 16px; background: linear-gradient(to bottom, #fff5f5, white); }
+    .icon-circle { width: 64px; height: 64px; border-radius: 50%; background: #ffebee; display: flex; justify-content: center; align-items: center; margin-bottom: 16px; }
+    .icon-circle mat-icon { font-size: 32px; width: 32px; height: 32px; }
+    .warn-glow { box-shadow: 0 0 20px rgba(244, 67, 54, 0.2); border: 4px solid white; }
+    .dialog-title { margin: 0; font-size: 1.5rem; font-weight: 600; color: #2c3e50; }
+    .dialog-content { padding: 0 32px 24px !important; text-align: center; overflow: hidden; }
+    .primary-text { font-size: 1.1rem; color: #34495e; margin-bottom: 24px; line-height: 1.5; }
+    .warning-box { background: #fff8e1; border-radius: 8px; padding: 12px 16px; display: flex; align-items: flex-start; gap: 12px; text-align: left; }
+    .info-icon { color: #f57c00; font-size: 20px; width: 20px; height: 20px; margin-top: 2px; }
+    .secondary-text { margin: 0; font-size: 0.9rem; color: #e65100; line-height: 1.4; }
+    .dialog-actions { padding: 16px 32px 32px !important; display: flex; gap: 16px; justify-content: center; margin-bottom: 0; }
+    .action-btn { padding: 8px 24px; font-size: 1rem; border-radius: 8px; height: 48px; min-width: 140px; }
+    .delete-btn { box-shadow: 0 4px 12px rgba(244, 67, 54, 0.2); }
+    @media (max-width: 600px) {
+      .dialog-content { padding: 0 16px 24px !important; }
+      .dialog-actions { flex-direction: column; padding: 16px 16px 24px !important; }
+      .action-btn { width: 100%; }
+    }
+  `]
+})
+export class DeleteLivestockDialogComponent {
+  constructor(
+    public dialogRef: MatDialogRef<DeleteLivestockDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { tag_number?: string, name?: string }
+  ) {}
+}
 
 @Component({
   selector: 'app-livestock-list',
@@ -21,7 +173,7 @@ import { Livestock } from '../../../../shared/models/livestock.model';
   imports: [
     CommonModule, RouterModule, MatTableModule, MatButtonModule, 
     MatIconModule, MatCardModule, MatInputModule, MatFormFieldModule,
-    MatPaginatorModule, MatSortModule, MatTooltipModule, MatChipsModule
+    MatPaginatorModule, MatSortModule, MatTooltipModule, MatChipsModule, MatDialogModule
   ],
   template: `
     <div class="page-container">
@@ -122,7 +274,10 @@ import { Livestock } from '../../../../shared/models/livestock.model';
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef class="actions-header"> Actions </th>
               <td mat-cell *matCellDef="let element" class="actions-cell">
-                <button *ngIf="isAdmin" mat-icon-button color="warn" (click)="delete(element.id)" matTooltip="Delete Record">
+                <button *ngIf="isAdmin" mat-icon-button color="primary" (click)="edit(element)" matTooltip="Edit Record">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button *ngIf="isAdmin" mat-icon-button color="warn" (click)="delete(element)" matTooltip="Delete Record">
                   <mat-icon>delete_outline</mat-icon>
                 </button>
               </td>
@@ -217,7 +372,10 @@ export class LivestockListComponent implements OnInit {
 
   constructor(
     private livestockService: LivestockService,
-    private authService: AuthService
+    private authService: AuthService,
+    private categoryService: CategoryService,
+    private custodianService: CustodianService,
+    private dialog: MatDialog
   ) {}
 
   async ngOnInit() {
@@ -252,15 +410,59 @@ export class LivestockListComponent implements OnInit {
     }
   }
 
-  async delete(id: string) {
-    if (confirm('Are you sure you want to permanently delete this record? This action cannot be undone.')) {
-      try {
-        await this.livestockService.delete(id);
-        await this.loadLivestock(); // Refresh data
-      } catch (error) {
-        console.error('Error deleting livestock:', error);
-        alert('Failed to delete the record.');
-      }
+  async edit(livestock: Livestock) {
+    try {
+      const [categories, custodians] = await Promise.all([
+        this.categoryService.getAll(),
+        this.custodianService.getActive()
+      ]);
+
+      const dialogRef = this.dialog.open(EditLivestockDialogComponent, {
+        width: '95vw',
+        maxWidth: '400px',
+        data: { livestock, categories, custodians }
+      });
+
+      dialogRef.afterClosed().subscribe(async (result) => {
+        if (result) {
+          try {
+            await this.livestockService.update(result.id, {
+              tag_number: result.tag_number,
+              name: result.name,
+              category: result.category,
+              gender: result.gender,
+              custodian_id: result.custodian_id
+            });
+            await this.loadLivestock();
+          } catch (e) {
+            console.error('Error updating livestock:', e);
+            alert('Failed to update livestock record.');
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Failed to load form data for edit modal', e);
+      alert('Failed to open edit modal.');
     }
+  }
+
+  delete(livestock: Livestock) {
+    const dialogRef = this.dialog.open(DeleteLivestockDialogComponent, {
+      width: '95vw',
+      maxWidth: '450px',
+      data: { tag_number: livestock.tag_number, name: livestock.name }
+    });
+
+    dialogRef.afterClosed().subscribe(async (confirmed) => {
+      if (confirmed) {
+        try {
+          await this.livestockService.delete(livestock.id);
+          await this.loadLivestock(); // Refresh data
+        } catch (error) {
+          console.error('Error deleting livestock:', error);
+          alert('Failed to delete the record.');
+        }
+      }
+    });
   }
 }
