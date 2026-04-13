@@ -102,13 +102,14 @@ import { AuthService } from '../../core/services/auth.service';
         </ng-container>
       </div>
 
-      <!-- Compliance Alerts (Admin Only) -->
+      <!-- Compliance Alerts (Admin & Staff Only) -->
       <div *ngIf="!isCustodian && pendingMortalities > 0" class="alert-banner">
         <mat-icon color="warn">warning_amber</mat-icon>
         <div class="alert-content">
           <strong>Attention required:</strong> There are {{pendingMortalities}} mortality reports pending validation or missing document attachments that are over 3 days old.
         </div>
-        <button mat-flat-button color="warn" routerLink="/transactions">Review Now</button>
+        <button *ngIf="isAdmin" mat-flat-button color="warn" routerLink="/transactions">Review Now</button>
+        <button *ngIf="!isAdmin" mat-flat-button color="warn" routerLink="/transactions">View Details</button>
       </div>
 
       <div class="main-content-grid">
@@ -268,6 +269,7 @@ export class DashboardComponent implements OnInit {
   pendingMortalities = 0;
   
   isCustodian = false;
+  isAdmin = false;
   sickLivestock = 0;
   weeklyLogs = 0;
 
@@ -283,6 +285,7 @@ export class DashboardComponent implements OnInit {
     try {
       const role = await this.authService.getUserRole();
       this.isCustodian = role === 'custodian';
+      this.isAdmin = role === 'admin';
 
       if (this.isCustodian) {
         const [livestock, logbooks] = await Promise.all([
