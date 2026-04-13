@@ -1,0 +1,15 @@
+<ng-container *ngIf="isLoggedIn; else loginTemplate">
+  <app-navbar (toggleSidebar)="toggleSidebar()"></app-navbar>
+  <mat-sidenav-container class="sidenav-container" autosize>
+    <mat-sidenav mode="side" opened class="sidenav" [class.collapsed]="sidebarCollapsed">
+      <app-sidebar [isCollapsed]="sidebarCollapsed"></app-sidebar>
+    </mat-sidenav>
+    <mat-sidenav-content class="content">
+      <router-outlet></router-outlet>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</ng-container>
+
+<ng-template #loginTemplate>
+  <router-outlet></router-outlet>
+</ng-template>

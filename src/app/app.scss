@@ -1,0 +1,24 @@
+.sidenav-container {
+  height: calc(100vh - 64px); /* Subtract navbar height */
+}
+.sidenav {
+  width: 250px;
+  background-color: white;
+  border-right: 1px solid rgba(0,0,0,0.1);
+  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow-x: hidden;
+}
+
+.sidenav.collapsed {
+  width: 65px;
+}
+
+/* Force mat-sidenav-content to recalculate its margin-left dynamically during the CSS transition */
+mat-sidenav-content.content {
+  transition: margin-left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.content {
+  padding: 0;
+  background-color: #f8f9fa;
+}

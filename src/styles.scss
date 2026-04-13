@@ -1,0 +1,133 @@
+/* Import all prebuilt Material themes and scope them to classes */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* For dynamic themes in modern Angular, we rely on the primary CSS variables below rather than deeply nesting entire framework CSS files */
+
+/* CSS Variables for custom styling syncing with the active theme */
+body { 
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif; 
+  --primary-color: #3f51b5;
+  --accent-color: #ff4081;
+}
+
+body.deeppurple-amber-theme {
+  --primary-color: #673ab7;
+  --accent-color: #ffd740;
+}
+
+body.pink-bluegrey-theme {
+  --primary-color: #e91e63;
+  --accent-color: #b0bec5;
+}
+
+body.purple-green-theme {
+  --primary-color: #9c27b0;
+  --accent-color: #69f0ae;
+}
+
+/* Make our custom UI elements respect the CSS variables */
+.header-icon {
+  color: var(--primary-color) !important;
+}
+
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+/* Force standard Angular Material elements to inherit the active theme colors GLOBALLY */
+:root, body {
+  /* Buttons */
+  --mdc-filled-button-container-color: var(--primary-color);
+  --mdc-protected-button-container-color: var(--primary-color);
+  --mdc-text-button-label-text-color: var(--primary-color);
+  --mdc-outlined-button-label-text-color: var(--primary-color);
+  --mdc-icon-button-icon-color: var(--primary-color);
+  --mat-icon-color: var(--primary-color);
+
+  /* Form Fields */
+  --mdc-filled-text-field-active-indicator-color: var(--primary-color);
+  --mdc-outlined-text-field-outline-color: var(--primary-color);
+  --mdc-outlined-text-field-focus-outline-color: var(--primary-color);
+  --mdc-outlined-text-field-hover-outline-color: var(--primary-color);
+  --mdc-outlined-text-field-focus-label-text-color: var(--primary-color);
+  --mdc-text-field-focus-label-text-color: var(--primary-color);
+  --mdc-text-field-hover-label-text-color: var(--primary-color);
+
+  /* Checkboxes / Radio / Toggles */
+  --mdc-checkbox-selected-focus-icon-color: var(--primary-color);
+  --mdc-checkbox-selected-hover-icon-color: var(--primary-color);
+  --mdc-checkbox-selected-icon-color: var(--primary-color);
+  --mdc-checkbox-selected-pressed-icon-color: var(--primary-color);
+  --mdc-radio-selected-focus-icon-color: var(--primary-color);
+  --mdc-radio-selected-hover-icon-color: var(--primary-color);
+  --mdc-radio-selected-icon-color: var(--primary-color);
+  --mdc-radio-selected-pressed-icon-color: var(--primary-color);
+  --mdc-switch-selected-focus-handle-color: var(--primary-color);
+  --mdc-switch-selected-hover-handle-color: var(--primary-color);
+  --mdc-switch-selected-pressed-handle-color: var(--primary-color);
+  --mdc-switch-selected-focus-track-color: var(--primary-color);
+  --mdc-switch-selected-hover-track-color: var(--primary-color);
+  --mdc-switch-selected-pressed-track-color: var(--primary-color);
+  --mdc-switch-selected-track-color: var(--primary-color);
+
+  /* Spinners & Progress Bars */
+  --mdc-circular-progress-active-indicator-color: var(--primary-color);
+  --mdc-linear-progress-active-indicator-color: var(--primary-color);
+  
+  /* Tabs */
+  --mat-tab-header-active-label-text-color: var(--primary-color);
+  --mat-tab-header-active-ripple-color: var(--primary-color);
+  --mat-tab-header-inactive-ripple-color: var(--primary-color);
+  --mat-tab-header-active-focus-label-text-color: var(--primary-color);
+  --mat-tab-header-active-hover-label-text-color: var(--primary-color);
+  
+  /* Selection styling */
+  ::selection {
+    background: var(--primary-color);
+    color: white;
+  }
+}
+
+/* Explicitly target components that need strict CSS inheritance overrides */
+.mat-mdc-button.mat-accent, 
+.mat-mdc-raised-button.mat-accent, 
+.mat-mdc-unelevated-button.mat-accent,
+.mat-mdc-outlined-button.mat-accent,
+.mat-mdc-icon-button.mat-accent,
+.mat-mdc-fab.mat-accent,
+.mat-mdc-mini-fab.mat-accent {
+  --mdc-filled-button-container-color: var(--accent-color);
+  --mdc-protected-button-container-color: var(--accent-color);
+  --mdc-text-button-label-text-color: var(--accent-color);
+  --mdc-outlined-button-label-text-color: var(--accent-color);
+  --mdc-icon-button-icon-color: var(--accent-color);
+}
+
+.mat-mdc-button.mat-warn, 
+.mat-mdc-raised-button.mat-warn, 
+.mat-mdc-unelevated-button.mat-warn,
+.mat-mdc-outlined-button.mat-warn,
+.mat-mdc-icon-button.mat-warn,
+.mat-mdc-fab.mat-warn,
+.mat-mdc-mini-fab.mat-warn {
+  --mdc-filled-button-container-color: #f44336;
+  --mdc-protected-button-container-color: #f44336;
+  --mdc-text-button-label-text-color: #f44336;
+  --mdc-outlined-button-label-text-color: #f44336;
+  --mdc-icon-button-icon-color: #f44336;
+}
+
+/* Override Mat Icons with primary/accent/warn colors explicitly */
+.mat-icon.mat-primary { color: var(--primary-color) !important; }
+.mat-icon.mat-accent { color: var(--accent-color) !important; }
+.mat-icon.mat-warn { color: #f44336 !important; }
+
+/* Global specific card overrides */
+.total-card {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%) !important;
+}
+
+.sidebar-header {
+  background-color: var(--primary-color) !important;
+}

@@ -1,0 +1,41 @@
+<div class="login-container">
+  <div class="login-overlay"></div>
+  
+  <mat-card class="login-card">
+    <div class="login-header">
+      <div class="logo-circle">
+        <mat-icon class="logo-icon">pets</mat-icon>
+      </div>
+      <h1 class="login-title">LIMS</h1>
+      <p class="login-subtitle">Livestock Information Management System</p>
+    </div>
+
+    <mat-card-content class="login-content">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email Address</mat-label>
+          <mat-icon matPrefix color="primary">email</mat-icon>
+          <input matInput formControlName="email" type="email" placeholder="admin@lims.com" required>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <mat-icon matPrefix color="primary">lock</mat-icon>
+          <input matInput formControlName="password" type="password" placeholder="••••••••" required>
+        </mat-form-field>
+        
+        <div *ngIf="error" class="error-msg">
+          {{ error }}
+        </div>
+        
+        <button mat-flat-button color="primary" type="submit" class="login-btn" [disabled]="loginForm.invalid">
+          Secure Login <mat-icon>login</mat-icon>
+        </button>
+      </form>
+    </mat-card-content>
+    
+    <div class="login-footer">
+      <p>Authorized personnel only.</p>
+    </div>
+  </mat-card>
+</div>
