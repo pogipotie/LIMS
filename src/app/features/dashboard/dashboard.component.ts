@@ -199,7 +199,7 @@ import { TransactionService } from '../../core/services/transaction.service';
       .dashboard-container { padding: 16px; }
       .welcome-header { flex-direction: column; align-items: flex-start; gap: 16px; }
       .header-actions { width: 100%; }
-      .add-btn { width: 100%; }
+      .add-btn { width: 100%; display: flex; justify-content: center; align-items: center; }
       .stats-grid { grid-template-columns: 1fr; gap: 16px; }
       .timeline-header { flex-direction: column; align-items: flex-start; }
       .timeline-item::before { left: 19px; }

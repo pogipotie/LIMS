@@ -102,7 +102,7 @@ import { InventoryService } from '../../../../core/services/inventory.service';
     .page-container { padding: 24px; max-width: 1400px; margin: 0 auto; background-color: #f8f9fa; min-height: calc(100vh - 64px); }
     .welcome-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
     .text-muted { color: #7f8c8d; margin-top: 8px; font-size: 1.1rem; }
-    .add-btn { padding: 8px 24px; font-size: 1.1rem; border-radius: 8px; }
+    .add-btn { padding: 8px 24px; font-size: 1.1rem; border-radius: 8px; height: auto; min-height: 48px; display: inline-flex; justify-content: center; align-items: center; }
     
     .spinner-container { display: flex; justify-content: center; margin-top: 100px; }
 
@@ -145,7 +145,7 @@ import { InventoryService } from '../../../../core/services/inventory.service';
       .page-container { padding: 16px; }
       .welcome-header { flex-direction: column; align-items: flex-start; gap: 16px; }
       .header-actions { width: 100%; }
-      .add-btn { width: 100%; }
+      .add-btn { width: 100%; display: flex; justify-content: center; align-items: center; white-space: normal; text-align: center; }
       .total-number { font-size: 4rem; }
     }
   `]

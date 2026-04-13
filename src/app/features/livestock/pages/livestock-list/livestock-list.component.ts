@@ -155,7 +155,7 @@ import { Livestock } from '../../../../shared/models/livestock.model';
       .page-container { padding: 16px; }
       .welcome-header { flex-direction: column; align-items: flex-start; gap: 16px; }
       .header-actions { width: 100%; }
-      .add-btn { width: 100%; }
+      .add-btn { width: 100%; display: flex; justify-content: center; align-items: center; white-space: normal; text-align: center; }
       .table-header { flex-direction: column; align-items: stretch; padding: 16px 16px 0 16px; }
       .search-bar { max-width: 100%; }
       .table-controls { align-self: flex-end; }
