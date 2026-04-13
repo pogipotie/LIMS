@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { environment } from '../../../environments/environment';
+import { createClient } from '@supabase/supabase-js';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -46,5 +48,38 @@ export class UserService {
       new_role: newRole
     });
     if (error) throw error;
+  }
+
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    const { error } = await this.supabase.client.auth.resetPasswordForEmail(email);
+    if (error) throw error;
+  }
+
+  async verifyAndResetPassword(email: string, otp: string, newPassword: string): Promise<void> {
+    // Create a temporary client that doesn't persist the session.
+    // This ensures the admin's current session isn't overwritten when the OTP is verified.
+    const tempClient = createClient(environment.supabaseUrl, environment.supabaseKey, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+
+    // Verify the OTP the staff member received
+    const { error: verifyError } = await tempClient.auth.verifyOtp({
+      email,
+      token: otp,
+      type: 'recovery'
+    });
+
+    if (verifyError) throw verifyError;
+
+    // Once verified, the tempClient is authenticated as the staff member.
+    // We can now update their password.
+    const { error: updateError } = await tempClient.auth.updateUser({
+      password: newPassword
+    });
+
+    // Sign out the temp client just to be clean
+    await tempClient.auth.signOut();
+
+    if (updateError) throw updateError;
   }
 }

@@ -12,6 +12,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDialogModule, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { UserService } from '../../core/services/user.service';
 import { AuthService } from '../../core/services/auth.service';
+import { SupabaseService } from '../../core/services/supabase.service';
+import { ResetPasswordDialogComponent } from './components/reset-password-dialog/reset-password-dialog.component';
 
 @Component({
   selector: 'app-delete-user-dialog',
@@ -155,6 +157,10 @@ export class DeleteUserDialogComponent {
                         <mat-icon>swap_horiz</mat-icon>
                         <span>Make {{element.role === 'admin' ? 'Staff' : 'Admin'}}</span>
                       </button>
+                      <button mat-menu-item (click)="resetPassword(element.user_id)">
+                        <mat-icon color="primary">vpn_key</mat-icon>
+                        <span>Reset Password</span>
+                      </button>
                       <button mat-menu-item (click)="deleteUser(element.user_id)" style="color: #c62828;">
                         <mat-icon color="warn">delete_outline</mat-icon>
                         <span>Delete Account</span>
@@ -206,6 +212,7 @@ export class UsersComponent implements OnInit {
     private fb: FormBuilder, 
     private userService: UserService,
     private authService: AuthService,
+    private supabase: SupabaseService,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef
   ) {
@@ -240,6 +247,31 @@ export class UsersComponent implements OnInit {
         console.error('Error changing role:', error);
         alert('Failed to change user role.');
       }
+    }
+  }
+
+  async resetPassword(userId: string) {
+    // First, we need to fetch the email of the user since we only have user_id from user_roles
+    // Supabase JS doesn't let us easily query auth.users from frontend unless we use an edge function
+    // But we can try to fetch the email from a custom RPC or ask the admin for it if we don't have it.
+    // To make it seamless, let's create a quick RPC to get user email by ID.
+    try {
+      const { data: userEmail, error } = await this.supabase.client.rpc('get_user_email_by_id', {
+        p_user_id: userId
+      });
+
+      if (error || !userEmail) {
+        throw new Error('Could not retrieve user email. Make sure the 008 SQL migration is run.');
+      }
+
+      this.dialog.open(ResetPasswordDialogComponent, {
+        width: '95vw',
+        maxWidth: '450px',
+        data: { email: userEmail }
+      });
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message);
     }
   }
 
