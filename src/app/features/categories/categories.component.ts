@@ -44,7 +44,7 @@ import { Category } from '../../shared/models/category.model';
     </mat-dialog-actions>
   `,
   styles: [`
-    .dialog-form { display: flex; flex-direction: column; gap: 16px; min-width: 350px; padding-top: 16px; }
+    .dialog-form { display: flex; flex-direction: column; gap: 16px; width: 100%; padding-top: 16px; box-sizing: border-box; }
     .full-width { width: 100%; }
   `]
 })
@@ -125,6 +125,12 @@ export class EditCategoryDialogComponent {
     .dialog-actions { padding: 16px 32px 32px !important; display: flex; gap: 16px; justify-content: center; margin-bottom: 0; }
     .action-btn { padding: 8px 24px; font-size: 1rem; border-radius: 8px; height: 48px; min-width: 140px; }
     .delete-btn { box-shadow: 0 4px 12px rgba(244, 67, 54, 0.2); }
+    
+    @media (max-width: 600px) {
+      .dialog-content { padding: 0 16px 24px !important; }
+      .dialog-actions { flex-direction: column; padding: 16px 16px 24px !important; }
+      .action-btn { width: 100%; }
+    }
   `]
 })
 export class DeleteConfirmDialogComponent {
@@ -315,7 +321,8 @@ export class CategoriesComponent implements OnInit {
 
   editCategory(category: Category) {
     const dialogRef = this.dialog.open(EditCategoryDialogComponent, {
-      width: '400px',
+      width: '95vw',
+      maxWidth: '400px',
       data: category
     });
 
@@ -373,7 +380,8 @@ export class CategoriesComponent implements OnInit {
 
   deleteCategory(id: string, name: string) {
     const dialogRef = this.dialog.open(DeleteConfirmDialogComponent, {
-      width: '450px',
+      width: '95vw',
+      maxWidth: '450px',
       data: { name }
     });
 
