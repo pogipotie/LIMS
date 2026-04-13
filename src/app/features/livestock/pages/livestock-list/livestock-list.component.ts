@@ -12,6 +12,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { LivestockService } from '../../../../core/services/livestock.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { Livestock } from '../../../../shared/models/livestock.model';
 
 @Component({
@@ -121,7 +122,7 @@ import { Livestock } from '../../../../shared/models/livestock.model';
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef class="actions-header"> Actions </th>
               <td mat-cell *matCellDef="let element" class="actions-cell">
-                <button mat-icon-button color="warn" (click)="delete(element.id)" matTooltip="Delete Record">
+                <button *ngIf="isAdmin" mat-icon-button color="warn" (click)="delete(element.id)" matTooltip="Delete Record">
                   <mat-icon>delete_outline</mat-icon>
                 </button>
               </td>
@@ -209,13 +210,22 @@ import { Livestock } from '../../../../shared/models/livestock.model';
 export class LivestockListComponent implements OnInit {
   displayedColumns: string[] = ['tag_number', 'name', 'category', 'custodian', 'gender', 'age', 'status', 'actions'];
   dataSource = new MatTableDataSource<Livestock>([]);
+  isAdmin = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private livestockService: LivestockService) {}
+  constructor(
+    private livestockService: LivestockService,
+    private authService: AuthService
+  ) {}
 
   async ngOnInit() {
+    const role = await this.authService.getUserRole();
+    this.isAdmin = role === 'admin';
+    if (!this.isAdmin) {
+      this.displayedColumns = this.displayedColumns.filter(c => c !== 'actions');
+    }
     await this.loadLivestock();
   }
 

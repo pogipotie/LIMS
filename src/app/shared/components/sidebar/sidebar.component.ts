@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatListModule } from '@angular/material/list';
 import { RouterModule } from '@angular/router';
@@ -43,18 +43,18 @@ import { AuthService } from '../../../core/services/auth.service';
           <span matListItemTitle *ngIf="!isCollapsed">Data Management</span>
         </a>
         
-        <mat-divider></mat-divider>
-        <div class="sidebar-subheader" *ngIf="!isCollapsed">System</div>
+        <mat-divider *ngIf="isAdmin"></mat-divider>
+        <div class="sidebar-subheader" *ngIf="!isCollapsed && isAdmin">System</div>
         
-        <a mat-list-item routerLink="/custodians" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Manage Custodians' : ''" matTooltipPosition="right">
+        <a *ngIf="isAdmin" mat-list-item routerLink="/custodians" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Manage Custodians' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>assignment_ind</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Manage Custodians</span>
         </a>
-        <a mat-list-item routerLink="/categories" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Manage Categories' : ''" matTooltipPosition="right">
+        <a *ngIf="isAdmin" mat-list-item routerLink="/categories" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Manage Categories' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>category</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Manage Categories</span>
         </a>
-        <a mat-list-item routerLink="/settings" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Global Settings' : ''" matTooltipPosition="right">
+        <a *ngIf="isAdmin" mat-list-item routerLink="/settings" (click)="onNavClick()" routerLinkActive="active-link" [matTooltip]="isCollapsed ? 'Global Settings' : ''" matTooltipPosition="right">
           <mat-icon matListItemIcon>settings</mat-icon>
           <span matListItemTitle *ngIf="!isCollapsed">Global Settings</span>
         </a>
@@ -175,11 +175,17 @@ import { AuthService } from '../../../core/services/auth.service';
     .logout-btn:hover { background-color: rgba(244, 67, 54, 0.08) !important; }
   `]
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   @Input() isCollapsed = false;
   @Output() navClick = new EventEmitter<void>();
+  isAdmin = false;
 
   constructor(private authService: AuthService) {}
+
+  async ngOnInit() {
+    const role = await this.authService.getUserRole();
+    this.isAdmin = role === 'admin';
+  }
 
   onNavClick() {
     this.navClick.emit();
