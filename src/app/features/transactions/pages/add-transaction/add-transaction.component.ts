@@ -74,6 +74,18 @@ import { Livestock } from '../../../../shared/models/livestock.model';
               <textarea matInput formControlName="notes" rows="3" placeholder="Add any relevant notes here..."></textarea>
             </mat-form-field>
 
+            <div class="file-upload-container">
+              <label class="file-upload-label">Supporting Document (Optional)</label>
+              <div class="file-upload-box">
+                <input type="file" (change)="onFileSelected($event)" accept="image/*,.pdf" #fileInput style="display: none;">
+                <button mat-stroked-button type="button" color="primary" (click)="fileInput.click()">
+                  <mat-icon>upload_file</mat-icon> Choose File
+                </button>
+                <span class="file-name" *ngIf="selectedFile">{{selectedFile.name}}</span>
+                <span class="file-name text-muted" *ngIf="!selectedFile">No file chosen (e.g. Vet Certificate, ICS)</span>
+              </div>
+            </div>
+
             <div class="actions">
               <button mat-button type="button" routerLink="..">Cancel</button>
               <button mat-raised-button color="primary" type="submit" [disabled]="transactionForm.invalid || loading">
@@ -93,6 +105,13 @@ import { Livestock } from '../../../../shared/models/livestock.model';
     .form-container { max-width: 800px; margin: 0 auto; padding: 20px; }
     .form-row { display: flex; gap: 20px; }
     .full-width { width: 100%; margin-bottom: 15px; }
+    
+    .file-upload-container { margin-bottom: 20px; }
+    .file-upload-label { display: block; font-size: 0.95rem; font-weight: 500; color: #34495e; margin-bottom: 8px; }
+    .file-upload-box { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px dashed #bdc3c7; border-radius: 8px; background-color: #fafafa; }
+    .file-name { font-size: 0.9rem; color: #2c3e50; }
+    .text-muted { color: #95a5a6; }
+    
     .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
     @media (max-width: 600px) {
@@ -106,6 +125,7 @@ export class AddTransactionComponent implements OnInit {
   transactionForm: FormGroup;
   loading = false;
   activeLivestock: Livestock[] = [];
+  selectedFile: File | null = null;
   
   transactionTypes = [
     { value: 'birth', label: 'Birth' },
@@ -133,12 +153,17 @@ export class AddTransactionComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      // Fetch ALL livestock for transactions (because a transaction could be a birth or purchase 
-      // where the animal isn't fully "active" yet, or we might be editing a past transaction)
       const allLivestock = await this.livestockService.getAll();
       this.activeLivestock = allLivestock;
     } catch (e) {
       console.error('Error loading livestock', e);
+    }
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
     }
   }
 
@@ -148,12 +173,26 @@ export class AddTransactionComponent implements OnInit {
       try {
         const formValue = { ...this.transactionForm.value };
         
-        // Supabase expects YYYY-MM-DD format for DATE columns
+        // Format Date
         const dateObj = new Date(formValue.transaction_date);
         formValue.transaction_date = dateObj.toISOString().split('T')[0];
         
         if (!formValue.amount) delete formValue.amount;
         if (!formValue.notes) delete formValue.notes;
+        
+        // Handle File Upload
+        if (this.selectedFile) {
+          try {
+            const url = await this.transactionService.uploadDocument(this.selectedFile);
+            formValue.document_url = url;
+          } catch (uploadErr) {
+            console.error('File upload failed:', uploadErr);
+            alert('File upload failed. Transaction will be saved without document.');
+          }
+        }
+        
+        // By default, transactions are pending validation from Property Office
+        formValue.validation_status = 'pending';
 
         await this.transactionService.create(formValue);
         this.router.navigate(['/transactions']);

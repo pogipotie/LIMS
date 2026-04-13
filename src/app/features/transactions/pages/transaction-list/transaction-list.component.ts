@@ -11,6 +11,7 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TransactionService } from '../../../../core/services/transaction.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { Transaction } from '../../../../shared/models/transaction.model';
 
 @Component({
@@ -108,13 +109,41 @@ import { Transaction } from '../../../../shared/models/transaction.model';
               </td>
             </ng-container>
 
+            <!-- Status & Docs Column -->
+            <ng-container matColumnDef="validation">
+              <th mat-header-cell *matHeaderCellDef> Status </th>
+              <td mat-cell *matCellDef="let element">
+                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                  <span class="validation-badge" [ngClass]="element.validation_status || 'approved'">
+                    {{element.validation_status || 'approved' | uppercase}}
+                  </span>
+                  <a *ngIf="element.document_url" [href]="element.document_url" target="_blank" class="doc-link">
+                    <mat-icon inline>attach_file</mat-icon> View Doc
+                  </a>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef class="actions-header"> Actions </th>
+              <td mat-cell *matCellDef="let element" class="actions-cell">
+                <button *ngIf="isAdmin && element.validation_status === 'pending'" 
+                        mat-flat-button color="primary" 
+                        class="approve-btn"
+                        (click)="approve(element.id)">
+                  Approve
+                </button>
+              </td>
+            </ng-container>
+
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <!-- FIXED: Proper matRowDef mapping to prevent duplicate header rendering -->
             <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
             
             <!-- Row shown when there is no matching data. -->
             <tr class="mat-row" *matNoDataRow>
-              <td class="mat-cell empty-state" colspan="5">
+              <td class="mat-cell empty-state" [attr.colspan]="displayedColumns.length">
                  <mat-icon class="empty-icon">search_off</mat-icon>
                  <p *ngIf="input.value">No transactions found matching "{{input.value}}"</p>
                  <p *ngIf="!input.value">No transactions have been recorded yet.</p>
@@ -178,7 +207,16 @@ import { Transaction } from '../../../../shared/models/transaction.model';
     .amount-text.positive { color: #2e7d32; }
     .amount-text.negative { color: #c62828; }
     
-    .notes-cell { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #7f8c8d; font-style: italic; }
+    .notes-cell { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #7f8c8d; font-style: italic; }
+
+    /* Validation Status Badges */
+    .validation-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; }
+    .validation-badge.approved { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+    .validation-badge.pending { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
+    .validation-badge.rejected { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+    .doc-link { font-size: 0.8rem; color: var(--primary-color); text-decoration: none; display: flex; align-items: center; gap: 2px; font-weight: 500; }
+    .doc-link:hover { text-decoration: underline; }
+    .approve-btn { line-height: 28px !important; font-size: 0.8rem; padding: 0 12px; }
 
     /* Empty State */
     .empty-state { text-align: center; padding: 60px 20px; color: #95a5a6; }
@@ -187,13 +225,14 @@ import { Transaction } from '../../../../shared/models/transaction.model';
   `]
 })
 export class TransactionListComponent implements OnInit {
-  displayedColumns: string[] = ['date', 'livestock', 'type', 'amount', 'notes'];
+  displayedColumns: string[] = ['date', 'livestock', 'type', 'amount', 'validation', 'notes', 'actions'];
   dataSource: MatTableDataSource<Transaction>;
+  isAdmin = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private transactionService: TransactionService) {
+  constructor(private transactionService: TransactionService, private authService: AuthService) {
     this.dataSource = new MatTableDataSource<Transaction>([]);
     
     // Custom filter predicate to search nested livestock object
@@ -213,6 +252,11 @@ export class TransactionListComponent implements OnInit {
   }
 
   async ngOnInit() {
+    const role = await this.authService.getUserRole();
+    this.isAdmin = role === 'admin';
+    if (!this.isAdmin) {
+      this.displayedColumns = this.displayedColumns.filter(c => c !== 'actions');
+    }
     await this.loadTransactions();
   }
 
@@ -236,6 +280,18 @@ export class TransactionListComponent implements OnInit {
 
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
+    }
+  }
+  
+  async approve(id: string) {
+    if (confirm('Approve this transaction?')) {
+      try {
+        await this.transactionService.updateValidationStatus(id, 'approved');
+        await this.loadTransactions(); // Refresh
+      } catch (err) {
+        console.error('Failed to approve transaction', err);
+        alert('Approval failed.');
+      }
     }
   }
   
