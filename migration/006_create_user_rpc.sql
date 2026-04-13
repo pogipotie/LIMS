@@ -53,16 +53,14 @@ BEGIN
     provider_id,
     identity_data,
     provider,
-    last_sign_in_at,
     created_at,
     updated_at
   ) VALUES (
     gen_random_uuid(),
     new_user_id,
-    new_user_id::text, -- provider_id is often the user_id for email/password auth
-    format('{"sub":"%s","email":"%s"}', new_user_id, email)::jsonb,
+    new_user_id::text, -- provider_id is the user_id for email/password auth
+    format('{"sub":"%s","email":"%s","email_verified":true,"phone_verified":false}', new_user_id, email)::jsonb,
     'email',
-    current_timestamp,
     current_timestamp,
     current_timestamp
   );
