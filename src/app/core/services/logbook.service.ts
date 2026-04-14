@@ -10,8 +10,8 @@ export class LogbookService {
 
   constructor(private supabase: SupabaseService) {}
 
-  async getAll(): Promise<Logbook[]> {
-    const { data, error } = await this.supabase.client
+  async getAll(limit: number = 0): Promise<Logbook[]> {
+    let query = this.supabase.client
       .from(this.TABLE)
       .select(`
         *,
@@ -24,6 +24,12 @@ export class LogbookService {
       `)
       .order('log_date', { ascending: false })
       .order('created_at', { ascending: false });
+
+    if (limit > 0) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
     return data || [];
   }

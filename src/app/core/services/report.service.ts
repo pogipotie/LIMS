@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 import { LivestockService } from './livestock.service';
 import { TransactionService } from './transaction.service';
 import { LogbookService } from './logbook.service';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 @Injectable({ providedIn: 'root' })
 export class ReportService {
@@ -78,7 +76,10 @@ export class ReportService {
     };
   }
 
-  exportCustodianPDF(reportData: any) {
+  async exportCustodianPDF(reportData: any) {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+
     const doc = new jsPDF();
     const periodName = reportData.period === 'weekly' ? 'Weekly' : 'Monthly';
     
@@ -122,7 +123,10 @@ export class ReportService {
     doc.save(`LIMS_Custodian_${periodName}_Report_${endStr.replace(/\//g, '-')}.pdf`);
   }
 
-  exportToPDF(reportData: any) {
+  async exportToPDF(reportData: any) {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+
     const doc = new jsPDF();
     const monthName = new Date(reportData.year, reportData.month).toLocaleString('default', { month: 'long' });
 

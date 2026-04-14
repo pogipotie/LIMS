@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { LivestockService } from '../../../../core/services/livestock.service';
 import { CategoryService } from '../../../../core/services/category.service';
 import { UserService } from '../../../../core/services/user.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { Category } from '../../../../shared/models/category.model';
 
 @Component({
@@ -124,6 +125,7 @@ export class AddLivestockComponent implements OnInit {
     private livestockService: LivestockService,
     private categoryService: CategoryService,
     private userService: UserService,
+    private notificationService: NotificationService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {
@@ -167,10 +169,11 @@ export class AddLivestockComponent implements OnInit {
         if (!formValue.name) delete formValue.name;
 
         await this.livestockService.create(formValue);
+        this.notificationService.success('Livestock created successfully!');
         this.router.navigate(['/livestock']);
       } catch (error: any) {
         console.error('Error creating livestock:', error);
-        alert('Failed to save. Make sure the tag number is unique if provided.');
+        this.notificationService.error('Failed to save. Make sure the tag number is unique if provided.');
       } finally {
         this.loading = false;
       }

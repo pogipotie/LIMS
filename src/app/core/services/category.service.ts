@@ -5,16 +5,27 @@ import { Category } from '../../shared/models/category.model';
 @Injectable({ providedIn: 'root' })
 export class CategoryService {
   private readonly table = 'livestock_categories';
+  private categoriesCache: Category[] | null = null; // Memory Cache
 
   constructor(private supabase: SupabaseService) {}
 
-  async getAll(): Promise<Category[]> {
+  async getAll(forceRefresh = false): Promise<Category[]> {
+    if (this.categoriesCache && !forceRefresh) {
+      return this.categoriesCache; // Return cached data instantly (0 network requests)
+    }
+
     const { data, error } = await this.supabase.client
       .from(this.table)
       .select('*')
       .order('name');
     if (error) throw error;
-    return data || [];
+    
+    this.categoriesCache = data || [];
+    return this.categoriesCache;
+  }
+
+  clearCache() {
+    this.categoriesCache = null;
   }
 
   async create(category: Partial<Category>): Promise<Category> {
@@ -24,6 +35,7 @@ export class CategoryService {
       .select()
       .single();
     if (error) throw error;
+    this.clearCache(); // Invalidate cache so next read gets fresh data
     return data;
   }
 
@@ -35,6 +47,7 @@ export class CategoryService {
       .select()
       .single();
     if (error) throw error;
+    this.clearCache();
     return data;
   }
 
@@ -44,5 +57,6 @@ export class CategoryService {
       .delete()
       .eq('id', id);
     if (error) throw error;
+    this.clearCache();
   }
 }

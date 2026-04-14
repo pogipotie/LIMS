@@ -5,15 +5,18 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
+import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 import { LivestockService } from '../../core/services/livestock.service';
 import { TransactionService } from '../../core/services/transaction.service';
 import { LogbookService } from '../../core/services/logbook.service';
 import { AuthService } from '../../core/services/auth.service';
 
+import { SupabaseService } from '../../core/services/supabase.service';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatCardModule, MatIconModule, MatButtonModule, MatDividerModule],
+  imports: [CommonModule, RouterModule, MatCardModule, MatIconModule, MatButtonModule, MatDividerModule, SkeletonLoaderComponent],
   template: `
     <div class="dashboard-container">
       <div class="welcome-header">
@@ -29,7 +32,14 @@ import { AuthService } from '../../core/services/auth.service';
       </div>
       
       <div class="stats-grid">
-        <!-- Active Livestock -->
+        <ng-container *ngIf="loading">
+          <mat-card class="stat-card" *ngFor="let i of [1,2,3,4]">
+            <app-skeleton-loader type="card"></app-skeleton-loader>
+          </mat-card>
+        </ng-container>
+
+        <ng-container *ngIf="!loading">
+          <!-- Active Livestock -->
         <mat-card class="stat-card">
           <div class="stat-icon-wrapper bg-primary-light">
             <mat-icon color="primary">pets</mat-icon>
@@ -100,10 +110,11 @@ import { AuthService } from '../../core/services/auth.service';
             </div>
           </mat-card>
         </ng-container>
+        </ng-container>
       </div>
 
       <!-- Compliance Alerts (Admin & Staff Only) -->
-      <div *ngIf="!isCustodian && pendingMortalities > 0" class="alert-banner">
+      <div *ngIf="!loading && !isCustodian && pendingMortalities > 0" class="alert-banner">
         <mat-icon color="warn">warning_amber</mat-icon>
         <div class="alert-content">
           <strong>Attention required:</strong> There are {{pendingMortalities}} mortality reports pending validation or missing document attachments that are over 3 days old.
@@ -122,32 +133,38 @@ import { AuthService } from '../../core/services/auth.service';
           </mat-card-header>
           <mat-divider></mat-divider>
           <mat-card-content>
-            <div *ngIf="recentActivity.length === 0" class="empty-state">
-              <mat-icon>history_toggle_off</mat-icon>
-              <p>No recent activity to show.</p>
-            </div>
+            <ng-container *ngIf="loading">
+              <app-skeleton-loader type="timeline"></app-skeleton-loader>
+            </ng-container>
             
-            <div class="timeline" *ngIf="recentActivity.length > 0">
-              <div class="timeline-item" *ngFor="let t of recentActivity">
-                <div class="timeline-icon" [ngClass]="isCustodian ? t.health_status : t.type">
-                  <mat-icon>{{ isCustodian ? getLogbookIcon(t.record_type) : getTransactionIcon(t.type) }}</mat-icon>
-                </div>
-                <div class="timeline-content">
-                  <div class="timeline-header">
-                    <strong class="timeline-title">{{ isCustodian ? (t.record_type || 'Routine Check') : (t.type || '').replace('_', ' ') | uppercase }}</strong>
-                    <span class="timeline-date">{{ (isCustodian ? t.log_date : t.transaction_date) | date:'MMM d, y, h:mm a':'+0800' }}</span>
+            <ng-container *ngIf="!loading">
+              <div *ngIf="recentActivity.length === 0" class="empty-state">
+                <mat-icon>history_toggle_off</mat-icon>
+                <p>No recent activity to show.</p>
+              </div>
+              
+              <div class="timeline" *ngIf="recentActivity.length > 0">
+                <div class="timeline-item" *ngFor="let t of recentActivity; trackBy: trackById">
+                  <div class="timeline-icon" [ngClass]="isCustodian ? t.health_status : t.type">
+                    <mat-icon>{{ isCustodian ? getLogbookIcon(t.record_type) : getTransactionIcon(t.type) }}</mat-icon>
                   </div>
-                  <p class="timeline-body">
-                    Livestock: <strong>{{ t.livestock?.tag_number || 'N/A' }}</strong> ({{ t.livestock?.category }})
-                    <span *ngIf="!isCustodian && t.amount"> &bull; <span class="amount-text">{{ t.amount | currency }}</span></span>
-                    <span *ngIf="isCustodian && t.weight_kg"> &bull; <span class="amount-text">{{ t.weight_kg }} kg</span></span>
-                  </p>
-                  <p class="timeline-notes" *ngIf="isCustodian && t.treatment"><mat-icon inline style="font-size: 14px; width: 14px; height: 14px;">medical_services</mat-icon> <strong>Treatment:</strong> {{ t.treatment }}</p>
-                  <p class="timeline-notes" *ngIf="!isCustodian && t.notes"><mat-icon inline>notes</mat-icon> {{ t.notes }}</p>
-                  <p class="timeline-notes" *ngIf="isCustodian && t.remarks"><mat-icon inline>notes</mat-icon> {{ t.remarks }}</p>
+                  <div class="timeline-content">
+                    <div class="timeline-header">
+                      <strong class="timeline-title">{{ isCustodian ? (t.record_type || 'Routine Check') : (t.type || '').replace('_', ' ') | uppercase }}</strong>
+                      <span class="timeline-date">{{ (isCustodian ? t.log_date : t.transaction_date) | date:'MMM d, y, h:mm a':'+0800' }}</span>
+                    </div>
+                    <p class="timeline-body">
+                      Livestock: <strong>{{ t.livestock?.tag_number || 'N/A' }}</strong> ({{ t.livestock?.category }})
+                      <span *ngIf="!isCustodian && t.amount"> &bull; <span class="amount-text">{{ t.amount | currency }}</span></span>
+                      <span *ngIf="isCustodian && t.weight_kg"> &bull; <span class="amount-text">{{ t.weight_kg }} kg</span></span>
+                    </p>
+                    <p class="timeline-notes" *ngIf="isCustodian && t.treatment"><mat-icon inline style="font-size: 14px; width: 14px; height: 14px;">medical_services</mat-icon> <strong>Treatment:</strong> {{ t.treatment }}</p>
+                    <p class="timeline-notes" *ngIf="!isCustodian && t.notes"><mat-icon inline>notes</mat-icon> {{ t.notes }}</p>
+                    <p class="timeline-notes" *ngIf="isCustodian && t.remarks"><mat-icon inline>notes</mat-icon> {{ t.remarks }}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            </ng-container>
           </mat-card-content>
           <mat-divider></mat-divider>
           <mat-card-actions align="end" class="card-actions">
@@ -272,12 +289,14 @@ export class DashboardComponent implements OnInit {
   isAdmin = false;
   sickLivestock = 0;
   weeklyLogs = 0;
+  loading = true;
 
   constructor(
     private livestockService: LivestockService,
     private transactionService: TransactionService,
     private logbookService: LogbookService,
     private authService: AuthService,
+    private supabase: SupabaseService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -287,74 +306,63 @@ export class DashboardComponent implements OnInit {
       this.isCustodian = role === 'custodian';
       this.isAdmin = role === 'admin';
 
+      // 1. Fetch High-Level Stats using the Optimized Supabase RPC
+      const session = await this.supabase.client.auth.getSession();
+      const userId = session.data.session?.user?.id;
+      
+      if (userId) {
+        const { data: statsData, error: statsError } = await this.supabase.client.rpc('get_dashboard_stats', {
+          role: role,
+          requesting_user_id: userId
+        });
+
+        if (!statsError && statsData) {
+          this.totalActiveLivestock = statsData.totalActiveLivestock || 0;
+          
+          if (this.isCustodian) {
+            this.sickLivestock = statsData.sickLivestock || 0;
+            this.weeklyLogs = statsData.weeklyLogs || 0;
+          } else {
+            this.totalDeceased = statsData.totalDeceased || 0;
+            this.totalTransactions = statsData.totalTransactions || 0;
+            this.pendingMortalities = statsData.pendingMortalities || 0;
+            this.monthlyAdditions = statsData.monthlyAdditions || 0;
+          }
+        } else {
+          console.warn('RPC failed or missing, fallback to slow fetching', statsError);
+        }
+      }
+
+      // 2. Fetch only the 5 most recent activities (Network Optimized)
       if (this.isCustodian) {
-        const [livestock, logbooks] = await Promise.all([
-          this.livestockService.getAll(),
-          this.logbookService.getAll()
-        ]);
-        
-        this.totalActiveLivestock = livestock.filter(l => l.status === 'active').length;
-        
-        // Filter sick livestock
-        const activeLivestockIds = livestock.filter(l => l.status === 'active').map(l => l.id);
-        const recentLogs = logbooks.filter(l => activeLivestockIds.includes(l.livestock_id));
-        
-        // Find animals currently marked as sick or injured
-        const sickIds = new Set(recentLogs.filter(l => l.health_status === 'sick' || l.health_status === 'injured').map(l => l.livestock_id));
-        this.sickLivestock = sickIds.size;
-        
-        // Weekly logs
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        this.weeklyLogs = logbooks.filter(l => new Date(l.log_date) >= oneWeekAgo).length;
-        
-        this.recentActivity = logbooks
-          .sort((a, b) => new Date(b.log_date).getTime() - new Date(a.log_date).getTime())
-          .slice(0, 5);
-
+        const { data: recentLogs } = await this.supabase.client
+          .from('logbooks')
+          .select(`*, livestock:livestock_id(tag_number, category)`)
+          .order('log_date', { ascending: false })
+          .limit(5);
+        this.recentActivity = recentLogs || [];
       } else {
-        // Fetch data concurrently for faster dashboard loading
-        const [livestock, transactions] = await Promise.all([
-          this.livestockService.getAll(),
-          this.transactionService.getAll()
-        ]);
-        
-        this.totalActiveLivestock = livestock.filter(l => l.status === 'active').length;
-        this.totalDeceased = livestock.filter(l => l.status === 'deceased').length;
-
-        this.totalTransactions = transactions.length;
-        
-        // Check for pending mortalities > 3 days old
-        const threeDaysAgo = new Date();
-        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-        
-        this.pendingMortalities = transactions.filter(t => 
-          t.type === 'death' && 
-          (t.validation_status === 'pending' || !t.document_url) &&
-          new Date(t.transaction_date) <= threeDaysAgo
-        ).length;
-
-        // Calculate additions this month (births, purchases, transfer_in)
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
-        this.monthlyAdditions = transactions.filter(t => {
-          const tDate = new Date(t.transaction_date);
-          const isAddition = ['birth', 'purchase', 'transfer_in'].includes(t.type);
-          return isAddition && tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
-        }).length;
-        
-        // Sort by date descending and grab the top 5
-        this.recentActivity = transactions
-          .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())
-          .slice(0, 5);
+        const { data: recentTxs } = await this.supabase.client
+          .from('transactions')
+          .select(`*, livestock:livestock_id(tag_number, category)`)
+          .order('transaction_date', { ascending: false })
+          .limit(5);
+        this.recentActivity = recentTxs || [];
       }
 
       this.cdr.detectChanges();
     } catch (e) {
       console.error('Error loading dashboard stats', e);
+    } finally {
+      this.loading = false;
+      this.cdr.detectChanges();
     }
   }
   
+  trackById(index: number, item: any): string {
+    return item.id;
+  }
+
   getTransactionIcon(type: string): string {
     switch(type) {
       case 'birth': return 'child_care';

@@ -174,3 +174,25 @@ body.purple-green-theme {
     overflow: visible !important;
   }
 }
+
+/* Custom Snackbar Styles */
+.success-snackbar {
+  --mdc-snackbar-container-color: #2e7d32;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+  border-radius: 8px;
+}
+
+.error-snackbar {
+  --mdc-snackbar-container-color: #d32f2f;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+  border-radius: 8px;
+}
+
+.info-snackbar {
+  --mdc-snackbar-container-color: #0288d1;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+  border-radius: 8px;
+}

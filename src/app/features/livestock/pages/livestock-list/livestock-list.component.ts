@@ -19,6 +19,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { Livestock } from '../../../../shared/models/livestock.model';
 import { CategoryService } from '../../../../core/services/category.service';
 import { UserService } from '../../../../core/services/user.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { Category } from '../../../../shared/models/category.model';
 import { Custodian } from '../../../../shared/models/custodian.model';
 
@@ -394,6 +395,7 @@ export class LivestockListComponent implements OnInit {
     private authService: AuthService,
     private categoryService: CategoryService,
     private userService: UserService,
+    private notificationService: NotificationService,
     private dialog: MatDialog
   ) {}
 
@@ -484,25 +486,29 @@ export class LivestockListComponent implements OnInit {
               custodian_id: result.custodian_id
             });
             await this.loadLivestock();
+            this.notificationService.success('Livestock record updated successfully');
           } catch (e) {
             console.error('Error updating livestock:', e);
-            alert('Failed to update livestock record.');
+            this.notificationService.error('Failed to update livestock record.');
           }
         }
       });
     } catch (e) {
       console.error('Failed to load form data for edit modal', e);
-      alert('Failed to open edit modal.');
+      this.notificationService.error('Failed to open edit modal.');
     }
   }
 
   delete(livestock: Livestock) {
     if (confirm(`Are you sure you want to delete ${livestock.tag_number}?`)) {
       this.livestockService.delete(livestock.id)
-        .then(() => this.loadLivestock())
+        .then(() => {
+          this.loadLivestock();
+          this.notificationService.success('Livestock deleted successfully');
+        })
         .catch(err => {
           console.error('Error deleting livestock:', err);
-          alert('Failed to delete livestock.');
+          this.notificationService.error('Failed to delete livestock.');
         });
     }
   }

@@ -268,12 +268,12 @@ export class MonthlyReportComponent implements OnInit {
     }
   }
 
-  exportPDF() {
+  async exportPDF() {
     if (this.reportData) {
       if (this.isCustodian) {
-        this.reportService.exportCustodianPDF(this.reportData);
+        await this.reportService.exportCustodianPDF(this.reportData);
       } else {
-        this.reportService.exportToPDF(this.reportData);
+        await this.reportService.exportToPDF(this.reportData);
       }
     }
   }

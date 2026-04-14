@@ -14,6 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSelectModule } from '@angular/material/select';
 import { LogbookService } from '../../core/services/logbook.service';
 import { LivestockService } from '../../core/services/livestock.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { Logbook } from '../../shared/models/logbook.model';
 import { Livestock } from '../../shared/models/livestock.model';
 
@@ -252,6 +253,7 @@ export class LogbooksComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private logbookService: LogbookService,
     private livestockService: LivestockService,
+    private notificationService: NotificationService,
     private cdr: ChangeDetectorRef
   ) {
     this.logbookForm = this.fb.group({
@@ -330,7 +332,8 @@ export class LogbooksComponent implements OnInit, OnDestroy {
   async loadLogbooks() {
     this.loading = true;
     try {
-      const data = await this.logbookService.getAll();
+      // Only load the 50 most recent logbooks for the side table
+      const data = await this.logbookService.getAll(50);
       this.dataSource.data = data;
     } catch (e) {
       console.error('Error loading logbooks', e);
@@ -348,15 +351,16 @@ export class LogbooksComponent implements OnInit, OnDestroy {
         if (!formValue.remarks) delete formValue.remarks;
         
         await this.logbookService.create(formValue);
-        this.logbookForm.reset({ health_status: 'healthy' });
+        this.logbookForm.reset({ health_status: 'healthy', record_type: 'Routine Check' });
         Object.keys(this.logbookForm.controls).forEach(key => {
           this.logbookForm.get(key)?.setErrors(null);
         });
         
         await this.loadLogbooks();
+        this.notificationService.success('Logbook entry saved successfully!');
       } catch (e: any) {
         console.error('Error creating logbook', e);
-        alert('Failed to save logbook entry.');
+        this.notificationService.error('Failed to save logbook entry.');
       } finally {
         this.isSubmitting = false;
         this.cdr.detectChanges();
