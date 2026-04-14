@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
@@ -28,15 +28,23 @@ export class App implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private themeService: ThemeService, // Injected to initialize theme on startup
-    private breakpointObserver: BreakpointObserver
+    private breakpointObserver: BreakpointObserver,
+    private router: Router
   ) {}
 
   async ngOnInit() {
     const { data: { session } } = await this.authService.session;
     this.isLoggedIn = !!session;
 
-    this.authService.onAuthStateChange((_event, session) => {
+    this.authService.onAuthStateChange(async (event, session) => {
       this.isLoggedIn = !!session;
+      
+      // Force redirect to login if session expires while they are staring at the dashboard
+      if (event === 'TOKEN_REFRESHED' && !session) {
+         this.router.navigate(['/auth/login']);
+      } else if (event === 'SIGNED_OUT') {
+         this.router.navigate(['/auth/login']);
+      }
     });
 
     this.breakpointObserver

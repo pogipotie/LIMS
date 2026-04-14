@@ -10,7 +10,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogModule, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { TransactionService } from '../../../../core/services/transaction.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Transaction } from '../../../../shared/models/transaction.model';
@@ -69,7 +70,8 @@ export class TransactionConfirmDialogComponent {
   imports: [
     CommonModule, RouterModule, MatTableModule, MatButtonModule, 
     MatIconModule, MatCardModule, MatInputModule, MatFormFieldModule,
-    MatPaginatorModule, MatSortModule, MatTooltipModule, MatDialogModule
+    MatPaginatorModule, MatSortModule, MatTooltipModule, MatDialogModule,
+    SkeletonLoaderComponent
   ],
   template: `
     <div class="page-container">
@@ -102,7 +104,11 @@ export class TransactionConfirmDialogComponent {
           </div>
         </div>
 
-        <div class="table-responsive">
+        <ng-container *ngIf="loading">
+          <app-skeleton-loader type="table"></app-skeleton-loader>
+        </ng-container>
+
+        <div class="table-responsive" *ngIf="!loading">
           <table mat-table [dataSource]="dataSource" matSort class="custom-table">
             
             <!-- Date Column -->
@@ -310,6 +316,7 @@ export class TransactionListComponent implements OnInit {
   displayedColumns: string[] = ['date', 'livestock', 'type', 'amount', 'validation', 'notes', 'actions'];
   dataSource: MatTableDataSource<Transaction>;
   isAdmin = false;
+  loading = true;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -347,6 +354,7 @@ export class TransactionListComponent implements OnInit {
   }
 
   async loadTransactions() {
+    this.loading = true;
     try {
       const data = await this.transactionService.getAll();
       this.dataSource.data = data;
@@ -357,6 +365,8 @@ export class TransactionListComponent implements OnInit {
       });
     } catch (error) {
       console.error('Error loading transactions:', error);
+    } finally {
+      this.loading = false;
     }
   }
 

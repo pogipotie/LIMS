@@ -61,7 +61,7 @@ export class AuthService {
   async signOut() {
     this.currentRole = null;
     await this.supabaseService.client.auth.signOut();
-    this.router.navigate(['/auth/login']);
+    window.location.href = '/auth/login'; // Force a full page reload to clear all states/caches
   }
 
   onAuthStateChange(callback: (event: any, session: any) => void) {

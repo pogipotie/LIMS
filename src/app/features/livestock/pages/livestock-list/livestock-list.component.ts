@@ -22,6 +22,7 @@ import { UserService } from '../../../../core/services/user.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { Category } from '../../../../shared/models/category.model';
 import { Custodian } from '../../../../shared/models/custodian.model';
+import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
@@ -176,7 +177,7 @@ export class DeleteLivestockDialogComponent {
   imports: [
     CommonModule, RouterModule, MatTableModule, MatButtonModule, 
     MatIconModule, MatCardModule, MatInputModule, MatFormFieldModule,
-    MatPaginatorModule, MatSortModule, MatTooltipModule, MatChipsModule, MatDialogModule, MatSlideToggleModule
+    MatPaginatorModule, MatSortModule, MatTooltipModule, MatChipsModule, MatDialogModule, MatSlideToggleModule, SkeletonLoaderComponent
   ],
   template: `
     <div class="page-container">
@@ -208,8 +209,12 @@ export class DeleteLivestockDialogComponent {
              </button>
           </div>
         </div>
+        
+        <ng-container *ngIf="loading">
+          <app-skeleton-loader type="table"></app-skeleton-loader>
+        </ng-container>
 
-        <div class="table-responsive">
+        <div class="table-responsive" *ngIf="!loading">
           <table mat-table [dataSource]="dataSource" matSort class="custom-table">
             
             <!-- Tag Number Column -->
@@ -386,6 +391,7 @@ export class LivestockListComponent implements OnInit {
   showInactive = false;
   isAdmin = false;
   isCustodian = false;
+  loading = true;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -422,11 +428,14 @@ export class LivestockListComponent implements OnInit {
   }
 
   async loadLivestock() {
+    this.loading = true;
     try {
       this.allLivestock = await this.livestockService.getAll();
       this.filterActive();
     } catch (error) {
       console.error('Error loading livestock:', error);
+    } finally {
+      this.loading = false;
     }
   }
 
