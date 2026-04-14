@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -277,7 +277,7 @@ import { SupabaseService } from '../../core/services/supabase.service';
     }
   `]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   totalActiveLivestock = 0;
   totalTransactions = 0;
   totalDeceased = 0;
@@ -290,6 +290,8 @@ export class DashboardComponent implements OnInit {
   sickLivestock = 0;
   weeklyLogs = 0;
   loading = true;
+  private realtimeChannel: any;
+  private isDestroyed = false;
 
   constructor(
     private livestockService: LivestockService,
@@ -301,6 +303,37 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    await this.loadDashboardData();
+    this.setupRealtime();
+  }
+
+  ngOnDestroy() {
+    this.isDestroyed = true;
+    if (this.realtimeChannel) {
+      this.supabase.client.removeChannel(this.realtimeChannel);
+    }
+  }
+
+  setupRealtime() {
+    this.realtimeChannel = this.supabase.client.channel('dashboard-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'livestock' }, () => {
+        this.loadDashboardData(false);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+        this.loadDashboardData(false);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'logbooks' }, () => {
+        this.loadDashboardData(false);
+      })
+      .subscribe();
+  }
+
+  async loadDashboardData(showSkeleton = true) {
+    if (showSkeleton) {
+      this.loading = true;
+      this.cdr.detectChanges();
+    }
+
     try {
       const role = await this.authService.getUserRole();
       this.isCustodian = role === 'custodian';
@@ -350,12 +383,16 @@ export class DashboardComponent implements OnInit {
         this.recentActivity = recentTxs || [];
       }
 
-      this.cdr.detectChanges();
+      if (!this.isDestroyed) {
+        this.cdr.detectChanges();
+      }
     } catch (e) {
       console.error('Error loading dashboard stats', e);
     } finally {
-      this.loading = false;
-      this.cdr.detectChanges();
+      if (!this.isDestroyed) {
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
     }
   }
   

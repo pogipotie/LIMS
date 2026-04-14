@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private currentRole: 'admin' | 'staff' | 'custodian' | null = null;
+  public cachedSession: any = null;
 
   constructor(private supabaseService: SupabaseService, private router: Router) {
     this.initRole();
@@ -12,6 +13,7 @@ export class AuthService {
 
   private async initRole() {
     const { data: { session } } = await this.session;
+    this.cachedSession = session;
     if (session?.user) {
       await this.fetchRole(session.user.id);
     }
@@ -66,6 +68,7 @@ export class AuthService {
 
   onAuthStateChange(callback: (event: any, session: any) => void) {
     return this.supabaseService.client.auth.onAuthStateChange(async (event, session) => {
+      this.cachedSession = session;
       if (session?.user) {
         await this.fetchRole(session.user.id);
       } else {
