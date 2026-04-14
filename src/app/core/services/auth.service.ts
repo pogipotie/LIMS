@@ -67,13 +67,21 @@ export class AuthService {
   }
 
   onAuthStateChange(callback: (event: any, session: any) => void) {
-    return this.supabaseService.client.auth.onAuthStateChange(async (event, session) => {
+    return this.supabaseService.client.auth.onAuthStateChange((event, session) => {
       this.cachedSession = session;
+      
+      // SUPABASE BUG FIX: We must NOT 'await' database calls inside the onAuthStateChange hook!
+      // Doing so locks the internal Supabase client and causes all future API calls to hang forever.
+      // We use setTimeout(..., 0) to push the fetchRole call outside the current execution lock.
       if (session?.user) {
-        await this.fetchRole(session.user.id);
+        setTimeout(() => {
+          this.fetchRole(session.user.id).catch(console.error);
+        }, 0);
       } else {
         this.currentRole = null;
       }
+      
+      // Fire the callback synchronously
       callback(event, session);
     });
   }
